@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.won983212.rewind.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "rewind.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "MixinMinecraft",
+    "MixinClientPacketListener"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
