@@ -1,6 +1,5 @@
 package com.won983212.rewind;
 
-import com.won983212.rewind.RewindMod;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.ConnectionProtocol;

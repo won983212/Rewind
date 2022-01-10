@@ -10,7 +10,8 @@
     "MixinClientHandshakePacketListener",
     "MixinClientLevel",
     "MixinMinecraft",
-    "MixinMultiPlayerGameMode"
+    "MixinMultiPlayerGameMode",
+    "MixinWorldRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
