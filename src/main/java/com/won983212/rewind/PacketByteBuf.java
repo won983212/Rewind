@@ -1,4 +1,4 @@
-package com.won983212.rewind.util;
+package com.won983212.rewind;
 
 import com.won983212.rewind.RewindMod;
 import io.netty.buffer.ByteBuf;
@@ -13,17 +13,14 @@ import java.io.IOException;
 
 public class PacketByteBuf {
     private final ByteBuf buffer;
-    private long time;
 
 
     public PacketByteBuf() {
         this.buffer = Unpooled.buffer();
-        this.time = System.currentTimeMillis();
     }
 
     public PacketByteBuf(ByteBuf buffer) {
         this.buffer = buffer;
-        this.time = System.currentTimeMillis();
     }
 
     public byte[] getBytes() {
@@ -32,7 +29,7 @@ public class PacketByteBuf {
         return data;
     }
 
-    public Packet<?> read() {
+    public PacketData read() {
         try {
             return readSilently(buffer);
         } catch (IOException e) {
@@ -45,43 +42,35 @@ public class PacketByteBuf {
         return buffer.readableBytes() > 0;
     }
 
-    public void write(Packet<?> packet) {
+    public void write(Packet<?> packet, long tick) {
         try {
-            writeTo(packet, buffer);
+            writeTo(packet, buffer, tick);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private Packet<?> readSilently(ByteBuf buffer) throws IOException {
-        long time = buffer.readLong();
-        try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+    private PacketData readSilently(ByteBuf buffer) throws IOException {
+        long tick = buffer.readLong();
         int i = buffer.readableBytes();
-        Packet<?> packet = null;
         if (i != 0) {
             FriendlyByteBuf friendlybytebuf = new FriendlyByteBuf(buffer);
             int j = friendlybytebuf.readVarInt();
-            packet = ConnectionProtocol.PLAY.createPacket(PacketFlow.CLIENTBOUND, j, friendlybytebuf);
+            Packet<?> packet = ConnectionProtocol.PLAY.createPacket(PacketFlow.CLIENTBOUND, j, friendlybytebuf);
             if (packet == null) {
                 throw new IOException("Bad packet id " + j);
             }
+            return new PacketData(tick, packet);
         }
-        return packet;
+        return null;
     }
 
-    private void writeTo(Packet<?> packet, ByteBuf buffer) throws IOException {
-        buffer.writeLong(System.currentTimeMillis() - time);
-        time = System.currentTimeMillis();
-
+    private void writeTo(Packet<?> packet, ByteBuf buffer, long tick) throws IOException {
         Integer integer = ConnectionProtocol.PLAY.getPacketId(PacketFlow.CLIENTBOUND, packet);
         if (integer == null) {
             throw new IOException("Can't serialize unregistered packet: " + packet.getClass());
         } else {
+            buffer.writeLong(tick);
             FriendlyByteBuf friendlybytebuf = new FriendlyByteBuf(buffer);
             friendlybytebuf.writeVarInt(integer);
             try {
@@ -99,6 +88,16 @@ public class PacketByteBuf {
                     throw throwable;
                 }
             }
+        }
+    }
+
+    public static class PacketData {
+        public final long tick;
+        public final Packet<?> packet;
+
+        public PacketData(long tick, Packet<?> packet) {
+            this.tick = tick;
+            this.packet = packet;
         }
     }
 }

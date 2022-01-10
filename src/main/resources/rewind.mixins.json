@@ -7,8 +7,10 @@
   "mixins": [
   ],
   "client": [
+    "MixinClientHandshakePacketListener",
+    "MixinClientLevel",
     "MixinMinecraft",
-    "MixinClientPacketListener"
+    "MixinMultiPlayerGameMode"
   ],
   "injectors": {
     "defaultRequire": 1
