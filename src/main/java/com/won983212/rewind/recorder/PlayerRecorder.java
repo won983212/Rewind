@@ -1,6 +1,5 @@
 package com.won983212.rewind.recorder;
 
-import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 import com.won983212.rewind.RewindMod;
 import net.minecraft.network.protocol.Packet;
@@ -15,9 +14,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// TODO 좀 코드 최적화 해야할듯
 public class PlayerRecorder {
     private final Player player;
     private final int updateInterval;
@@ -31,6 +32,7 @@ public class PlayerRecorder {
     private Vec3 motionp = Vec3.ZERO;
     private int tickCount;
     private int teleportDelay;
+    private final ItemStack[] lastSlot = new ItemStack[EquipmentSlot.values().length];
     private List<Entity> lastPassengers = Collections.emptyList();
     private boolean wasRiding;
     private boolean wasOnGround;
@@ -166,17 +168,16 @@ public class PlayerRecorder {
     }
 
     private void sendEquipment() {
-        List<Pair<EquipmentSlot, ItemStack>> list1 = Lists.newArrayList();
-
+        List<Pair<EquipmentSlot, ItemStack>> changes = new ArrayList<>();
         for (EquipmentSlot equipmentslot : EquipmentSlot.values()) {
             ItemStack itemstack = ((LivingEntity) player).getItemBySlot(equipmentslot);
-            if (!itemstack.isEmpty()) {
-                list1.add(Pair.of(equipmentslot, itemstack.copy()));
+            if (lastSlot[equipmentslot.ordinal()] != itemstack) {
+                changes.add(Pair.of(equipmentslot, itemstack.copy()));
+                lastSlot[equipmentslot.ordinal()] = itemstack.copy();
             }
         }
-
-        if (!list1.isEmpty()) {
-            packetSender.writePacket(new ClientboundSetEquipmentPacket(player.getId(), list1));
+        if (!changes.isEmpty()) {
+            packetSender.writePacket(new ClientboundSetEquipmentPacket(player.getId(), changes));
         }
     }
 

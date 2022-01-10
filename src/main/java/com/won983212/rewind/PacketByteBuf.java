@@ -9,6 +9,7 @@ import net.minecraft.network.SkipPacketException;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.*;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
@@ -45,7 +46,8 @@ public class PacketByteBuf {
         return buffer.readableBytes() > 0;
     }
 
-    public void write(Packet<?> packet, long tick) {
+
+    public void write(Packet<?> packet, int tick) {
         try {
             writeTo(packet, buffer, tick);
         } catch (IOException e) {
@@ -54,35 +56,42 @@ public class PacketByteBuf {
     }
 
     private PacketData readSilently(ByteBuf buffer) throws IOException {
-        long tick = buffer.readLong();
-        int i = buffer.readableBytes();
-        if (i != 0) {
-            FriendlyByteBuf friendlybytebuf = new FriendlyByteBuf(buffer);
-            int j = friendlybytebuf.readVarInt();
-            Packet<?> packet = ConnectionProtocol.PLAY.createPacket(PacketFlow.CLIENTBOUND, j, friendlybytebuf);
+        int tick = buffer.readInt();
+        int packetSize = buffer.readInt();
+        if (buffer.readableBytes() != 0) {
+            ByteBuf data = buffer.readBytes(packetSize);
+            FriendlyByteBuf friendlybytebuf = new FriendlyByteBuf(data);
+            int id = friendlybytebuf.readVarInt();
+            Packet<?> packet = ConnectionProtocol.PLAY.createPacket(PacketFlow.CLIENTBOUND, id, friendlybytebuf);
             if (packet == null) {
-                throw new IOException("Bad packet id " + j);
+                throw new IOException("Bad packet id " + id);
             }
             return new PacketData(tick, packet);
         }
         return null;
     }
 
-    private void writeTo(Packet<?> packet, ByteBuf buffer, long tick) throws IOException {
-        Integer integer = ConnectionProtocol.PLAY.getPacketId(PacketFlow.CLIENTBOUND, packet);
-        if (integer == null) {
+    private void writeTo(Packet<?> packet, ByteBuf buffer, int tick) throws IOException {
+        Integer id = ConnectionProtocol.PLAY.getPacketId(PacketFlow.CLIENTBOUND, packet);
+        if (id == null) {
             throw new IOException("Can't serialize unregistered packet: " + packet.getClass());
         } else {
-            buffer.writeLong(tick);
-            FriendlyByteBuf friendlybytebuf = new FriendlyByteBuf(buffer);
-            friendlybytebuf.writeVarInt(integer);
             try {
-                int i = friendlybytebuf.writerIndex();
-                packet.write(friendlybytebuf);
-                int j = friendlybytebuf.writerIndex() - i;
-                if (j > 8388608) {
-                    throw new IllegalArgumentException("Packet too big (is " + j + ", should be less than 8388608): " + packet);
+                buffer.writeInt(tick);
+
+                FriendlyByteBuf data = new FriendlyByteBuf(Unpooled.buffer());
+                int size = data.writerIndex();
+
+                data.writeVarInt(id);
+                packet.write(data);
+                size = data.writerIndex() - size;
+
+                if (size > 8388608) {
+                    throw new IllegalArgumentException("Packet too big (is " + size + ", should be less than 8388608): " + packet);
                 }
+
+                buffer.writeInt(size);
+                buffer.writeBytes(data);
             } catch (Throwable throwable) {
                 RewindMod.LOGGER.error("Error encoding packet", throwable);
                 if (packet.isSkippable()) {

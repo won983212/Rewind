@@ -1,8 +1,10 @@
 package com.won983212.rewind.recorder;
 
 import com.won983212.rewind.PacketByteBuf;
+import com.won983212.rewind.client.ClientDist;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.thread.BlockableEventLoop;
@@ -11,13 +13,11 @@ import net.minecraft.world.entity.player.Player;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.function.Consumer;
 
 public class Recorder implements PacketWriter {
     private PacketByteBuf buf;
     private boolean recording;
-    private long tickTime;
+    private int tickTime;
     private PlayerRecorder clientPlayerRecorder;
     private final PacketHandler handshakePacketHandler;
     private boolean initialPosRecorded = false;
@@ -54,11 +54,16 @@ public class Recorder implements PacketWriter {
         clientPlayerRecorder.tick();
     }
 
+    // TODO Spawn할 때 내가 spawn된다
+    // TODO (후순위) Chunk는 좀 더 효율적인 방법으로 load하도록
     public void writePacket(Packet<?> packet) {
-        if (packet instanceof ClientboundCustomPayloadPacket) {
+        if (!PacketFilter.canHandle(packet)) {
             return;
         }
         if (!recording && !handshakePacketHandler.has(packet)) {
+            return;
+        }
+        if (ClientDist.REPLAYER.isReplaying()) {
             return;
         }
         BlockableEventLoop<Runnable> mc = Minecraft.getInstance();
@@ -83,6 +88,12 @@ public class Recorder implements PacketWriter {
                 } else {
                     return;
                 }
+            }
+            if (packet instanceof ClientboundCustomPayloadPacket) {
+                packet = new ClientboundCustomPayloadPacket(
+                        ((ClientboundCustomPayloadPacket) packet).getIdentifier(),
+                        new FriendlyByteBuf(((ClientboundCustomPayloadPacket) packet).getData().slice().retain())
+                );
             }
             writePacketData(packet);
         }
@@ -120,27 +131,6 @@ public class Recorder implements PacketWriter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    private static class PacketHandler {
-        private final HashMap<Class<? extends Packet<?>>, Consumer<? extends Packet<?>>> handlers = new HashMap<>();
-
-        public <T extends Packet<?>> void addHandler(Class<T> packetClass, Consumer<T> handler) {
-            handlers.put(packetClass, handler);
-        }
-
-        public <T extends Packet<?>> boolean handle(T packet) {
-            Consumer<T> handler = (Consumer<T>) handlers.get(packet.getClass());
-            if (handler != null) {
-                handler.accept(packet);
-                return true;
-            }
-            return false;
-        }
-
-        public boolean has(Packet<?> packet) {
-            return handlers.containsKey(packet.getClass());
         }
     }
 }
