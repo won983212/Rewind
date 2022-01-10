@@ -20,6 +20,7 @@ public class Recorder implements PacketWriter {
     private long tickTime;
     private PlayerRecorder clientPlayerRecorder;
     private final PacketHandler handshakePacketHandler;
+    private boolean initialPosRecorded = false;
 
 
     public Recorder() {
@@ -70,8 +71,16 @@ public class Recorder implements PacketWriter {
 
     private void handlePacket(Packet<?> packet) {
         if (!handshakePacketHandler.handle(packet)) {
+            PacketByteBuf.logPacket(packet, true);
             if (packet instanceof ClientboundAnimatePacket) {
                 if (((ClientboundAnimatePacket) packet).getAction() == 2) {
+                    return;
+                }
+            }
+            if (packet instanceof ClientboundPlayerPositionPacket) { // TODO 이건 다른 Dimension으로 갈 때 오류를 야기함
+                if (!initialPosRecorded) {
+                    initialPosRecorded = true;
+                } else {
                     return;
                 }
             }

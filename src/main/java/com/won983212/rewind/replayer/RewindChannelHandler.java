@@ -29,7 +29,7 @@ public class RewindChannelHandler extends ChannelInboundHandlerAdapter {
 
         if (msg instanceof ClientboundLoginPacket) {
             ClientboundLoginPacket packet = (ClientboundLoginPacket) msg;
-            msg = new ClientboundLoginPacket(-1, false, GameType.SPECTATOR, null, packet.levels(),
+            msg = new ClientboundLoginPacket(-123, false, GameType.SPECTATOR, null, packet.levels(),
                     packet.registryHolder(), packet.dimensionType(), packet.dimension(), packet.seed(),
                     0, packet.chunkRadius(), packet.simulationDistance(), packet.reducedDebugInfo(),
                     packet.showDeathScreen(), packet.isDebug(), packet.isFlat());

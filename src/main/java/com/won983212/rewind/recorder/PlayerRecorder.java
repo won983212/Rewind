@@ -5,21 +5,18 @@ import com.mojang.datafixers.util.Pair;
 import com.won983212.rewind.RewindMod;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class PlayerRecorder {
     private final Player player;
@@ -37,6 +34,7 @@ public class PlayerRecorder {
     private List<Entity> lastPassengers = Collections.emptyList();
     private boolean wasRiding;
     private boolean wasOnGround;
+    private boolean wasHurtMarkProcessed;
 
 
     public PlayerRecorder(Player player, int updateInterval, PacketWriter packetSender) {
@@ -57,7 +55,7 @@ public class PlayerRecorder {
 
         sendPassengersChanges();
 
-        if (tickCount % updateInterval == 0 || player.hasImpulse || player.getEntityData().isDirty()) {
+        if (tickCount % updateInterval == 0) {
             int yRot = Mth.floor(player.getYRot() * 256.0F / 360.0F);
             int xRot = Mth.floor(player.getXRot() * 256.0F / 360.0F);
             boolean updateRot = Math.abs(yRot - yRotp) >= 1 || Math.abs(xRot - xRotp) >= 1;
@@ -70,7 +68,6 @@ public class PlayerRecorder {
                 }
 
                 updatePrevPos();
-                sendDirtyEntityData();
                 wasRiding = true;
             } else {
                 ++teleportDelay;
@@ -106,7 +103,6 @@ public class PlayerRecorder {
 
                 sendEquipment();
                 sendMobEffect();
-                sendDirtyEntityData();
 
                 if (updatePos) {
                     updatePrevPos();
@@ -116,19 +112,18 @@ public class PlayerRecorder {
                     yRotp = yRot;
                     xRotp = xRot;
                 }
-
                 wasRiding = false;
             }
-
             sendYHeadChanges();
-            player.hasImpulse = false;
         }
         sendAnimation();
 
         ++tickCount;
-        if (player.hurtMarked) {
+        if (player.hurtMarked && !wasHurtMarkProcessed) {
             packetSender.writePacket(new ClientboundSetEntityMotionPacket(player));
-            player.hurtMarked = false;
+            wasHurtMarkProcessed = true;
+        } else {
+            wasHurtMarkProcessed = false;
         }
     }
 
@@ -183,20 +178,6 @@ public class PlayerRecorder {
         if (!list1.isEmpty()) {
             packetSender.writePacket(new ClientboundSetEquipmentPacket(player.getId(), list1));
         }
-    }
-
-    private void sendDirtyEntityData() {
-        SynchedEntityData synchedentitydata = player.getEntityData();
-        if (synchedentitydata.isDirty()) {
-            packetSender.writePacket(new ClientboundSetEntityDataPacket(player.getId(), synchedentitydata, false));
-        }
-
-        Set<AttributeInstance> set = player.getAttributes().getDirtyAttributes();
-        if (!set.isEmpty()) {
-            packetSender.writePacket(new ClientboundUpdateAttributesPacket(player.getId(), set));
-        }
-
-        set.clear();
     }
 
     private void updatePrevPos() {

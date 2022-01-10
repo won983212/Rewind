@@ -78,6 +78,7 @@ public class Replayer {
         }
         if (packetQueue != null) {
             channel.writeInbound(packetQueue);
+            PacketByteBuf.logPacket(packetQueue, true);
             packetQueue = null;
         }
         while (packetBuffer.hasPacket()) {
@@ -85,7 +86,7 @@ public class Replayer {
             if (packet != null) {
                 if (packet.tick <= tickTime) {
                     channel.writeInbound(packet.packet);
-                    System.out.println(packet.packet.getClass());
+                    PacketByteBuf.logPacket(packet.packet, true);
                 } else {
                     packetQueue = packet.packet;
                     nextSendTime = packet.tick;
