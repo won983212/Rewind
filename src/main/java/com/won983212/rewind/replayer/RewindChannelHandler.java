@@ -5,9 +5,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket;
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
-import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.world.level.GameType;
 
 public class RewindChannelHandler extends ChannelInboundHandlerAdapter {
@@ -20,6 +18,7 @@ public class RewindChannelHandler extends ChannelInboundHandlerAdapter {
         super.channelActive(ctx);
     }
 
+    @SuppressWarnings("PatternVariableCanBeUsed")
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (!(msg instanceof Packet<?>)) {
@@ -42,20 +41,10 @@ public class RewindChannelHandler extends ChannelInboundHandlerAdapter {
             }
         }
 
-        if (msg instanceof ClientboundSetHealthPacket) {
-            msg = null;
-        }
-
-        if (msg instanceof ClientboundPlayerAbilitiesPacket) {
-            ClientboundPlayerAbilitiesPacket packet = (ClientboundPlayerAbilitiesPacket) msg;
-            Abilities abilities = new Abilities();
-            abilities.mayfly = true;
-            abilities.instabuild = false;
-            abilities.invulnerable = true;
-            abilities.flying = true;
-            abilities.setFlyingSpeed(packet.getFlyingSpeed());
-            abilities.setWalkingSpeed(packet.getWalkingSpeed());
-            msg = new ClientboundPlayerAbilitiesPacket(abilities);
+        if (msg instanceof ClientboundRespawnPacket) {
+            ClientboundRespawnPacket packet = (ClientboundRespawnPacket) msg;
+            msg = new ClientboundRespawnPacket(packet.getDimensionType(), packet.getDimension(), packet.getSeed(),
+                    GameType.SPECTATOR, null, packet.isDebug(), packet.isFlat(), packet.shouldKeepAllPlayerData());
         }
 
         if (msg != null) {

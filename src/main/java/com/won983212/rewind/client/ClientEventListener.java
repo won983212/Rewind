@@ -5,9 +5,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -29,6 +33,15 @@ public class ClientEventListener {
             if (screen instanceof TitleScreen) {
                 ClientDist.REPLAYER.startReplay(new File("C:/users/psvm/desktop/replay.dat"));
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent e) {
+        Player player = e.getPlayer();
+        if (player != null) {
+            ClientDist.RECORDER.writePacket(new ClientboundAddPlayerPacket(player));
+            ClientDist.RECORDER.writePacket(new ClientboundSetEntityDataPacket(player.getId(), player.getEntityData(), true));
         }
     }
 

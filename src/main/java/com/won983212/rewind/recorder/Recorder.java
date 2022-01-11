@@ -48,7 +48,7 @@ public class Recorder implements PacketWriter {
     }
 
     public void playerTick(Player player) {
-        if (clientPlayerRecorder == null) {
+        if (clientPlayerRecorder == null || clientPlayerRecorder.isPlayerInvaild()) {
             clientPlayerRecorder = new PlayerRecorder(player, 10, this);
         }
         clientPlayerRecorder.tick();

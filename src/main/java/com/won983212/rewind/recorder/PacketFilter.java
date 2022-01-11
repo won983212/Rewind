@@ -13,6 +13,8 @@ public class PacketFilter {
         // minecraft player update
         IGNORE_PACKETS.add(ClientboundSetHealthPacket.class);
         IGNORE_PACKETS.add(ClientboundSetExperiencePacket.class);
+        IGNORE_PACKETS.add(ClientboundPlayerAbilitiesPacket.class);
+        IGNORE_PACKETS.add(ClientboundRespawnPacket.class);
 
         // recipe
         IGNORE_PACKETS.add(ClientboundRecipePacket.class);

@@ -41,8 +41,8 @@ public class PlayerRecorder {
 
     public PlayerRecorder(Player player, int updateInterval, PacketWriter packetSender) {
         this.packetSender = packetSender;
-        this.player = player;
         this.updateInterval = updateInterval;
+        this.player = player;
         this.updatePrevPos();
         this.yRotp = Mth.floor(player.getYRot() * 256.0F / 360.0F);
         this.xRotp = Mth.floor(player.getXRot() * 256.0F / 360.0F);
@@ -50,9 +50,14 @@ public class PlayerRecorder {
         this.wasOnGround = player.isOnGround();
     }
 
+    public boolean isPlayerInvaild(){
+        return player.isRemoved();
+    }
+
     public void tick() {
         if (player.isRemoved()) {
             RewindMod.LOGGER.warn("Fetching packet for removed entity {}", player);
+            return;
         }
 
         sendPassengersChanges();
