@@ -2,6 +2,7 @@ package com.won983212.rewind.client;
 
 import com.won983212.rewind.RewindMod;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.TextComponent;
@@ -21,17 +22,23 @@ import java.io.File;
 
 @Mod.EventBusSubscriber(modid = RewindMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEventListener {
-    // TODO for test
+    // TODO 이제 이 방식 말고 실제로 사용할 수 있도록 바꿔보자
     @SubscribeEvent
-    public static void onGuiOpen(InputEvent.KeyInputEvent event) {
+    public static void onKeyInput(InputEvent.KeyInputEvent event) {
         if (event.getAction() == GLFW.GLFW_PRESS && event.getKey() == GLFW.GLFW_KEY_SEMICOLON) {
             Screen screen = Minecraft.getInstance().screen;
             if (screen == null) {
-                ClientDist.RECORDER.save(new File("C:/users/psvm/desktop/replay.dat"));
-                Minecraft.getInstance().gui.getChat().addMessage(new TextComponent("Record Saved."));
+                ChatComponent chat = Minecraft.getInstance().gui.getChat();
+                if (ClientDist.RECORDER.isRecording()) {
+                    ClientDist.RECORDER.stop();
+                    chat.addMessage(new TextComponent("Record end."));
+                } else {
+                    ClientDist.RECORDER.start();
+                    chat.addMessage(new TextComponent("Record start."));
+                }
             }
             if (screen instanceof TitleScreen) {
-                ClientDist.REPLAYER.startReplay(new File("C:/users/psvm/desktop/replay.dat"));
+                ClientDist.REPLAYER.startReplay(new File("C:/users/psvm/desktop/replay.pkt"));
             }
         }
     }
@@ -40,19 +47,16 @@ public class ClientEventListener {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent e) {
         Player player = e.getPlayer();
         if (player != null) {
-            ClientDist.RECORDER.writePacket(new ClientboundAddPlayerPacket(player));
-            ClientDist.RECORDER.writePacket(new ClientboundSetEntityDataPacket(player.getId(), player.getEntityData(), true));
+            ClientDist.RECORDER.handlePacket(new ClientboundAddPlayerPacket(player));
+            ClientDist.RECORDER.handlePacket(new ClientboundSetEntityDataPacket(player.getId(), player.getEntityData(), true));
         }
     }
 
     @SubscribeEvent
-    public static void onWorldLoad(WorldEvent.Load event) {
-        ClientDist.RECORDER.start();
-    }
-
-    @SubscribeEvent
     public static void onWorldUnload(WorldEvent.Unload event) {
-        ClientDist.RECORDER.stop();
+        if (ClientDist.RECORDER.isRecording()) {
+            ClientDist.RECORDER.stop();
+        }
     }
 
     @SubscribeEvent

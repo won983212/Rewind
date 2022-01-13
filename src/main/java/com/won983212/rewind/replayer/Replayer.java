@@ -1,9 +1,10 @@
 package com.won983212.rewind.replayer;
 
-import com.won983212.rewind.PacketByteBuf;
+import com.won983212.rewind.io.PacketByteBuffer;
+import com.won983212.rewind.io.PacketFileInputStream;
 import com.won983212.rewind.mixin.MixinMinecraft;
+import com.won983212.rewind.util.Debug;
 import com.won983212.rewind.util.Lang;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.AttributeKey;
@@ -15,17 +16,15 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.login.ClientboundGameProfilePacket;
 import net.minecraftforge.network.NetworkConstants;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 
 public class Replayer {
     private EmbeddedChannel channel;
     private RewindChannelHandler channelHandler;
-    private PacketByteBuf packetBuffer;
+    private PacketFileInputStream packetReader;
     private Packet<?> packetQueue;
     private long tickTime;
     private long nextSendTime;
@@ -38,7 +37,7 @@ public class Replayer {
 
         Connection connection = new Connection(PacketFlow.CLIENTBOUND) {
             @Override
-            public void exceptionCaught(ChannelHandlerContext p_129533_, Throwable t) {
+            public void exceptionCaught(@NotNull ChannelHandlerContext p_129533_, Throwable t) {
                 t.printStackTrace();
             }
         };
@@ -60,16 +59,14 @@ public class Replayer {
         nextSendTime = 0;
 
         try {
-            FileChannel fileChannel = new FileInputStream(input).getChannel();
-            MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, input.length());
-            packetBuffer = new PacketByteBuf(Unpooled.wrappedBuffer(mappedByteBuffer));
+            packetReader = new PacketFileInputStream(input);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public boolean isReplaying(){
-        return packetBuffer != null;
+    public boolean isReplaying() {
+        return packetReader != null;
     }
 
     public void tick() {
@@ -78,29 +75,33 @@ public class Replayer {
         }
         if (packetQueue != null) {
             channel.writeInbound(packetQueue);
-            PacketByteBuf.logPacket(packetQueue, true);
+            Debug.logPacket(packetQueue, true);
             packetQueue = null;
         }
-        while (packetBuffer.hasPacket()) {
-            PacketByteBuf.PacketData packet = packetBuffer.read();
-            if (packet != null) {
-                if (packet.tick <= tickTime) {
-                    channel.writeInbound(packet.packet);
-                    PacketByteBuf.logPacket(packet.packet, true);
+        try {
+            while (!packetReader.isEmpty()) {
+                PacketByteBuffer.PacketData packet = packetReader.read();
+                if (packet != null) {
+                    if (packet.tick <= tickTime) {
+                        channel.writeInbound(packet.packet);
+                        Debug.logPacket(packet.packet, true);
+                    } else {
+                        packetQueue = packet.packet;
+                        nextSendTime = packet.tick;
+                        break;
+                    }
                 } else {
-                    packetQueue = packet.packet;
-                    nextSendTime = packet.tick;
                     break;
                 }
-            } else {
-                break;
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public void close(){
+    public void close() {
         Minecraft mc = Minecraft.getInstance();
-        packetBuffer = null;
+        packetReader = null;
         packetQueue = null;
         channelHandler.close();
         channel.close().awaitUninterruptibly();

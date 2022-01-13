@@ -22,6 +22,6 @@ public class MixinClientHandshakePacketListener {
     @Inject(method = "handleGameProfile", at = @At("HEAD"))
     private void onLogin(ClientboundGameProfilePacket packet, CallbackInfo ci) {
         connection.channel().pipeline()
-                .addBefore("packet_handler", "packet_recorder", new PacketInterceptor(ClientDist.RECORDER));
+                .addBefore("packet_handler", "packet_recorder", new PacketInterceptor(ClientDist.RECORDER::handlePacket));
     }
 }

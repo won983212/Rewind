@@ -17,7 +17,7 @@ public class MixinWorldRenderer {
     private void onDestroyBlockProgress(int id, BlockPos pos, int progress, CallbackInfo ci) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && id == player.getId()) {
-            ClientDist.RECORDER.writePacket(new ClientboundBlockDestructionPacket(id, pos, progress));
+            ClientDist.RECORDER.handlePacket(new ClientboundBlockDestructionPacket(id, pos, progress));
         }
     }
 }

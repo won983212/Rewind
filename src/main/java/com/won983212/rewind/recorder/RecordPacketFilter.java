@@ -6,8 +6,9 @@ import net.minecraft.network.protocol.game.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PacketFilter {
+public class RecordPacketFilter {
     private static final Set<Class<? extends Packet<?>>> IGNORE_PACKETS = new HashSet<>();
+    private static final Set<Class<? extends Packet<?>>> ALWAYS_HANDLING_PACKETS = new HashSet<>();
 
     static {
         // minecraft player update
@@ -37,9 +38,18 @@ public class PacketFilter {
 
         // statistics
         IGNORE_PACKETS.add(ClientboundAwardStatsPacket.class);
+
+        // always handling (even not recording)
+        ALWAYS_HANDLING_PACKETS.add(ClientboundLoginPacket.class);
+        ALWAYS_HANDLING_PACKETS.add(ClientboundCustomPayloadPacket.class);
+        ALWAYS_HANDLING_PACKETS.add(ClientboundPlayerPositionPacket.class);
     }
 
     public static boolean canHandle(Packet<?> packet) {
         return !IGNORE_PACKETS.contains(packet.getClass());
+    }
+
+    public static boolean isAlwaysHandlingPacket(Packet<?> packet) {
+        return ALWAYS_HANDLING_PACKETS.contains(packet.getClass());
     }
 }

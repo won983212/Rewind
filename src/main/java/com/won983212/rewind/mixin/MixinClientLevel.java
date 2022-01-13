@@ -21,14 +21,14 @@ public class MixinClientLevel {
     @Inject(method = "playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V", at = @At("HEAD"))
     private void onPlaySound(Player player, double x, double y, double z, SoundEvent event, SoundSource source, float volume, float pitch, CallbackInfo ci) {
         if (isClientPlayer(player)) {
-            ClientDist.RECORDER.writePacket(new ClientboundSoundPacket(event, source, x, y, z, volume, pitch));
+            ClientDist.RECORDER.handlePacket(new ClientboundSoundPacket(event, source, x, y, z, volume, pitch));
         }
     }
 
     @Inject(method = "levelEvent", at = @At("HEAD"))
     private void onLevelEvent(@Nullable Player player, int type, BlockPos pos, int data, CallbackInfo ci) {
         if (isClientPlayer(player)) {
-            ClientDist.RECORDER.writePacket(new ClientboundLevelEventPacket(type, pos, data, false));
+            ClientDist.RECORDER.handlePacket(new ClientboundLevelEventPacket(type, pos, data, false));
         }
     }
 

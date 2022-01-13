@@ -4,17 +4,19 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.network.protocol.Packet;
 
-public class PacketInterceptor extends ChannelInboundHandlerAdapter {
-    private final PacketWriter packetWriter;
+import java.util.function.Consumer;
 
-    public PacketInterceptor(PacketWriter packetWriter) {
-        this.packetWriter = packetWriter;
+public class PacketInterceptor extends ChannelInboundHandlerAdapter {
+    private final Consumer<Packet<?>> packetHandler;
+
+    public PacketInterceptor(Consumer<Packet<?>> packetHandler) {
+        this.packetHandler = packetHandler;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof Packet<?>) {
-            packetWriter.writePacket((Packet<?>) msg);
+            packetHandler.accept((Packet<?>) msg);
         }
         super.channelRead(ctx, msg);
     }

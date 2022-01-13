@@ -17,12 +17,13 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 // TODO 좀 코드 최적화 해야할듯
 public class PlayerRecorder {
     private final Player player;
     private final int updateInterval;
-    private final PacketWriter packetSender;
+    private final Consumer<Packet<?>> packetSender;
     private long xp;
     private long yp;
     private long zp;
@@ -39,7 +40,7 @@ public class PlayerRecorder {
     private boolean wasHurtMarkProcessed;
 
 
-    public PlayerRecorder(Player player, int updateInterval, PacketWriter packetSender) {
+    public PlayerRecorder(Player player, int updateInterval, Consumer<Packet<?>> packetSender) {
         this.packetSender = packetSender;
         this.updateInterval = updateInterval;
         this.player = player;
@@ -69,7 +70,7 @@ public class PlayerRecorder {
 
             if (player.isPassenger()) {
                 if (updateRot) {
-                    packetSender.writePacket(new ClientboundMoveEntityPacket.Rot(player.getId(), (byte) yRot, (byte) xRot, player.isOnGround()));
+                    packetSender.accept(new ClientboundMoveEntityPacket.Rot(player.getId(), (byte) yRot, (byte) xRot, player.isOnGround()));
                     yRotp = yRot;
                     xRotp = xRot;
                 }
@@ -105,7 +106,7 @@ public class PlayerRecorder {
                 sendMotionChanges();
 
                 if (updatePacket != null) {
-                    packetSender.writePacket(updatePacket);
+                    packetSender.accept(updatePacket);
                 }
 
                 sendEquipment();
@@ -127,7 +128,7 @@ public class PlayerRecorder {
 
         ++tickCount;
         if (player.hurtMarked && !wasHurtMarkProcessed) {
-            packetSender.writePacket(new ClientboundSetEntityMotionPacket(player));
+            packetSender.accept(new ClientboundSetEntityMotionPacket(player));
             wasHurtMarkProcessed = true;
         } else {
             wasHurtMarkProcessed = false;
@@ -138,7 +139,7 @@ public class PlayerRecorder {
         List<Entity> list = player.getPassengers();
         if (!list.equals(lastPassengers)) {
             lastPassengers = list;
-            packetSender.writePacket(new ClientboundSetPassengersPacket(player));
+            packetSender.accept(new ClientboundSetPassengersPacket(player));
         }
     }
 
@@ -147,14 +148,14 @@ public class PlayerRecorder {
         double d0 = vec.distanceToSqr(motionp);
         if (d0 > 1.0E-7D || d0 > 0.0D && vec.lengthSqr() == 0.0D) {
             motionp = vec;
-            packetSender.writePacket(new ClientboundSetEntityMotionPacket(player.getId(), motionp));
+            packetSender.accept(new ClientboundSetEntityMotionPacket(player.getId(), motionp));
         }
     }
 
     private void sendYHeadChanges() {
         int yHeadRot = Mth.floor(player.getYHeadRot() * 256.0F / 360.0F);
         if (Math.abs(yHeadRot - yHeadRotp) >= 1) {
-            packetSender.writePacket(new ClientboundRotateHeadPacket(player, (byte) yHeadRot));
+            packetSender.accept(new ClientboundRotateHeadPacket(player, (byte) yHeadRot));
             yHeadRotp = yHeadRot;
         }
     }
@@ -162,13 +163,13 @@ public class PlayerRecorder {
     private void sendAnimation() {
         if (player.swinging && player.swingTime == 0) {
             int arm = player.swingingArm == InteractionHand.MAIN_HAND ? 0 : 3;
-            packetSender.writePacket(new ClientboundAnimatePacket(player, arm));
+            packetSender.accept(new ClientboundAnimatePacket(player, arm));
         }
     }
 
     private void sendMobEffect() {
         for (MobEffectInstance mobeffectinstance : player.getActiveEffects()) {
-            packetSender.writePacket(new ClientboundUpdateMobEffectPacket(player.getId(), mobeffectinstance));
+            packetSender.accept(new ClientboundUpdateMobEffectPacket(player.getId(), mobeffectinstance));
         }
     }
 
@@ -182,7 +183,7 @@ public class PlayerRecorder {
             }
         }
         if (!changes.isEmpty()) {
-            packetSender.writePacket(new ClientboundSetEquipmentPacket(player.getId(), changes));
+            packetSender.accept(new ClientboundSetEquipmentPacket(player.getId(), changes));
         }
     }
 
