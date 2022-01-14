@@ -19,6 +19,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 public class RecordHeaderWriter {
@@ -29,6 +30,7 @@ public class RecordHeaderWriter {
         this.initialPacketBuffer = new PacketByteBuffer();
     }
 
+    // TODO 지옥에서 녹화 시작하면 에러. (login packet과 연관)
     public boolean handleHeaderPacket(Packet<?> packet) {
         if (RecordPacketFilter.isHeaderPacket(packet)) {
             if (packet instanceof ClientboundLoginPacket) {
@@ -44,6 +46,7 @@ public class RecordHeaderWriter {
         packetFileWriter.write(initialPacketBuffer);
         recordPlayers(packetFileWriter);
         recordCurrentLoadedChunk(packetFileWriter);
+        recordPlayerPosition(packetFileWriter);
     }
 
     private void recordCurrentLoadedChunk(PacketFileOutputStream packetFileWriter) throws IOException {
@@ -120,6 +123,14 @@ public class RecordHeaderWriter {
             data.writeBoolean(true);
             data.writeComponent(player.getDisplayName());
         }
+    }
+
+    private void recordPlayerPosition(PacketFileOutputStream data) throws IOException {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) {
+            throw new IOException("Can't record player position.");
+        }
+        data.write(Recorder.makePlayerPositionPacket(mc.player), 0);
     }
 
     private void writeToBuffer(Packet<?> packet) {

@@ -9,9 +9,9 @@
   "client": [
     "MixinClientHandshakePacketListener",
     "MixinClientLevel",
+    "MixinLevelRenderer",
     "MixinMinecraft",
-    "MixinMultiPlayerGameMode",
-    "MixinWorldRenderer"
+    "MixinMultiPlayerGameMode"
   ],
   "injectors": {
     "defaultRequire": 1

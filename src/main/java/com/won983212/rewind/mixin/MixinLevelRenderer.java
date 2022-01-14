@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
-public class MixinWorldRenderer {
+public class MixinLevelRenderer {
     @Inject(method = "destroyBlockProgress", at = @At("HEAD"))
     private void onDestroyBlockProgress(int id, BlockPos pos, int progress, CallbackInfo ci) {
         LocalPlayer player = Minecraft.getInstance().player;

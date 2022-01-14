@@ -1,6 +1,7 @@
 package com.won983212.rewind.client;
 
 import com.won983212.rewind.RewindMod;
+import com.won983212.rewind.recorder.Recorder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.Screen;
@@ -9,10 +10,12 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
@@ -21,6 +24,7 @@ import java.io.File;
 
 @Mod.EventBusSubscriber(modid = RewindMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEventListener {
+
     // TODO 이제 이 방식 말고 실제로 사용할 수 있도록 바꿔보자
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event) {
@@ -43,12 +47,15 @@ public class ClientEventListener {
     }
 
     @SubscribeEvent
-    public static void onPlayerNetworkRespawn(ClientPlayerNetworkEvent.RespawnEvent e) {
-        Player player = e.getNewPlayer();
-        if (player != null) {
-            ClientDist.RECORDER.handlePacket(new ClientboundAddPlayerPacket(player));
-            ClientDist.RECORDER.handlePacket(new ClientboundSetEntityDataPacket(player.getId(), player.getEntityData(), true));
-        }
+    public static void onHandlePlayerRespawnPacket(ClientPlayerNetworkEvent.RespawnEvent e) {
+        Player newPlayer = e.getNewPlayer();
+        ClientDist.RECORDER.handlePacket(new ClientboundAddPlayerPacket(newPlayer));
+        ClientDist.RECORDER.handlePacket(new ClientboundSetEntityDataPacket(newPlayer.getId(), newPlayer.getEntityData(), true));
+    }
+
+    @SubscribeEvent
+    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent e) {
+        ClientDist.RECORDER.handlePacket(Recorder.makePlayerPositionPacket(e.getPlayer()));
     }
 
     @SubscribeEvent

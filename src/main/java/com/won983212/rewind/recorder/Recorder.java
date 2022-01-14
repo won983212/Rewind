@@ -6,11 +6,15 @@ import com.won983212.rewind.io.PacketFileOutputStream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.util.thread.BlockableEventLoop;
 import net.minecraft.world.entity.player.Player;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 public class Recorder {
     private final RecordHeaderWriter recordHeaderWriter;
@@ -71,7 +75,7 @@ public class Recorder {
     }
 
     // TODO (후순위) Chunk는 좀 더 효율적인 방법으로 load하도록
-    // TODO 잠자고 일어나면 텔레포트 (PlayerPositionPacket과 연관)
+    // TODO (후순위) 죽었다 살아나면 다시 chunk로딩한다.
     public void handlePacket(Packet<?> packet) {
         if (!RecordPacketFilter.canHandle(packet)) {
             return;
@@ -94,15 +98,22 @@ public class Recorder {
         if (!isRecording() && recordHeaderWriter.handleHeaderPacket(packet)) {
             return;
         }
-        if (packet instanceof ClientboundAnimatePacket) {
-            if (((ClientboundAnimatePacket) packet).getAction() == 2) {
+        if (packet instanceof ClientboundAnimatePacket animatePacket) {
+            if (animatePacket.getAction() == 2) {
                 return;
             }
         }
-        writePacketToFile(packet);
-    }
-
-    private void writePacketToFile(Packet<?> packet) {
+        if (packet instanceof ClientboundPlayerPositionPacket positionPacket) {
+            if (positionPacket.getId() != -1) {
+                return;
+            }
+        }
+        if (packet instanceof ClientboundRespawnPacket respawnPacket) {
+            Player player = Minecraft.getInstance().player;
+            if (player != null && respawnPacket.getDimension() == player.getLevel().dimension()) {
+                return;
+            }
+        }
         try {
             if (packetWriter != null) {
                 packetWriter.write(packet, tickTime);
@@ -110,5 +121,14 @@ public class Recorder {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static ClientboundPlayerPositionPacket makePlayerPositionPacket(@Nonnull Player player) {
+        double x = player.getX();
+        double y = player.getY();
+        double z = player.getZ();
+        float yRot = player.getYRot();
+        float xRot = player.getXRot();
+        return new ClientboundPlayerPositionPacket(x, y, z, yRot, xRot, Collections.emptySet(), -1, false);
     }
 }
