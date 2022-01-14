@@ -10,10 +10,10 @@ import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
@@ -27,7 +27,7 @@ public class ClientEventListener {
     public static void onKeyInput(InputEvent.KeyInputEvent event) {
         if (event.getAction() == GLFW.GLFW_PRESS && event.getKey() == GLFW.GLFW_KEY_SEMICOLON) {
             Screen screen = Minecraft.getInstance().screen;
-            if (screen == null) {
+            if (screen == null && !ClientDist.REPLAYER.isReplaying()) {
                 ChatComponent chat = Minecraft.getInstance().gui.getChat();
                 if (ClientDist.RECORDER.isRecording()) {
                     ClientDist.RECORDER.stop();
@@ -44,18 +44,11 @@ public class ClientEventListener {
     }
 
     @SubscribeEvent
-    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent e) {
-        Player player = e.getPlayer();
+    public static void onPlayerNetworkRespawn(ClientPlayerNetworkEvent.RespawnEvent e) {
+        Player player = e.getNewPlayer();
         if (player != null) {
             ClientDist.RECORDER.handlePacket(new ClientboundAddPlayerPacket(player));
             ClientDist.RECORDER.handlePacket(new ClientboundSetEntityDataPacket(player.getId(), player.getEntityData(), true));
-        }
-    }
-
-    @SubscribeEvent
-    public static void onWorldUnload(WorldEvent.Unload event) {
-        if (ClientDist.RECORDER.isRecording()) {
-            ClientDist.RECORDER.stop();
         }
     }
 

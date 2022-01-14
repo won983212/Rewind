@@ -31,6 +31,7 @@ public class PacketFileOutputStream {
         packets.getBuffer().resetReaderIndex();
     }
 
+    // TODO (후순위) 좀 더 세련된 방식으로 buffering or 성능 개선 (in도 포함)
     public void write(Packet<?> packet, int tick) throws IOException {
         buffer.write(packet, tick);
         if (buffer.getBuffer().readableBytes() > FLUSH_BYTES) {

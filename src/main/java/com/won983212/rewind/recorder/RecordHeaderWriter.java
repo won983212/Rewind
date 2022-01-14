@@ -21,16 +21,16 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import java.io.IOException;
 import java.util.List;
 
-public class RecordInitializer {
+public class RecordHeaderWriter {
     private final PacketByteBuffer initialPacketBuffer;
 
 
-    public RecordInitializer() {
+    public RecordHeaderWriter() {
         this.initialPacketBuffer = new PacketByteBuffer();
     }
 
-    public boolean handleAlwaysActivePacket(Packet<?> packet) {
-        if (RecordPacketFilter.isAlwaysHandlingPacket(packet)) {
+    public boolean handleHeaderPacket(Packet<?> packet) {
+        if (RecordPacketFilter.isHeaderPacket(packet)) {
             if (packet instanceof ClientboundLoginPacket) {
                 initialPacketBuffer.getBuffer().clear();
             }
@@ -40,7 +40,7 @@ public class RecordInitializer {
         return false;
     }
 
-    public void writeInitialPacket(PacketFileOutputStream packetFileWriter) throws IOException {
+    public void writeHeaderPacket(PacketFileOutputStream packetFileWriter) throws IOException {
         packetFileWriter.write(initialPacketBuffer);
         recordPlayers(packetFileWriter);
         recordCurrentLoadedChunk(packetFileWriter);

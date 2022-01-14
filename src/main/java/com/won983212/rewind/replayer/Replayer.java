@@ -45,6 +45,14 @@ public class Replayer {
         connection.setListener(new ClientHandshakePacketListenerImpl(connection, mc, null, $ -> {
         }));
 
+        try {
+            packetReader = new PacketFileInputStream(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ((MixinMinecraft) mc).setConnection(connection);
+
         channelHandler = new RewindChannelHandler();
         channel = new EmbeddedChannel();
         channel.pipeline().addLast("rewind_packet_handler", channelHandler)
@@ -52,17 +60,10 @@ public class Replayer {
                 .fireChannelActive();
         channel.attr(AttributeKey.valueOf("fml:netversion")).set(NetworkConstants.FMLNETMARKER);
         channel.writeInbound(new ClientboundGameProfilePacket(mc.getUser().getGameProfile()));
-        ((MixinMinecraft) mc).setConnection(connection);
 
         packetQueue = null;
         tickTime = 0;
         nextSendTime = 0;
-
-        try {
-            packetReader = new PacketFileInputStream(input);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public boolean isReplaying() {

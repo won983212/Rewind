@@ -13,14 +13,14 @@ import java.io.File;
 import java.io.IOException;
 
 public class Recorder {
-    private final RecordInitializer recordInitializer;
+    private final RecordHeaderWriter recordHeaderWriter;
     private PacketFileOutputStream packetWriter;
     private PlayerRecorder clientPlayerRecorder;
     private int tickTime;
 
 
     public Recorder() {
-        recordInitializer = new RecordInitializer();
+        recordHeaderWriter = new RecordHeaderWriter();
     }
 
     public void start() {
@@ -28,7 +28,7 @@ public class Recorder {
             try {
                 tickTime = 0;
                 packetWriter = new PacketFileOutputStream(new File("C:/users/psvm/desktop/replay.pkt"));
-                recordInitializer.writeInitialPacket(packetWriter);
+                recordHeaderWriter.writeHeaderPacket(packetWriter);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -71,13 +71,12 @@ public class Recorder {
     }
 
     // TODO (후순위) Chunk는 좀 더 효율적인 방법으로 load하도록
-    // TODO 다른 dimension으로 가면 handle못함
     // TODO 잠자고 일어나면 텔레포트 (PlayerPositionPacket과 연관)
     public void handlePacket(Packet<?> packet) {
         if (!RecordPacketFilter.canHandle(packet)) {
             return;
         }
-        if (!isRecording() && !RecordPacketFilter.isAlwaysHandlingPacket(packet)) {
+        if (!isRecording() && !RecordPacketFilter.isHeaderPacket(packet)) {
             return;
         }
         if (ClientDist.REPLAYER.isReplaying()) {
@@ -92,7 +91,7 @@ public class Recorder {
     }
 
     private void writePacket(Packet<?> packet) {
-        if (!isRecording() && recordInitializer.handleAlwaysActivePacket(packet)) {
+        if (!isRecording() && recordHeaderWriter.handleHeaderPacket(packet)) {
             return;
         }
         if (packet instanceof ClientboundAnimatePacket) {

@@ -32,6 +32,13 @@ public class MixinClientLevel {
         }
     }
 
+    @Inject(method = "disconnect", at = @At("HEAD"))
+    private void onDisconnect(CallbackInfo ci) {
+        if (ClientDist.RECORDER.isRecording()) {
+            ClientDist.RECORDER.stop();
+        }
+    }
+
     private boolean isClientPlayer(Player player) {
         return player == Minecraft.getInstance().player;
     }

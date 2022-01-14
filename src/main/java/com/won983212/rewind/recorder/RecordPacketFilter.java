@@ -8,14 +8,14 @@ import java.util.Set;
 
 public class RecordPacketFilter {
     private static final Set<Class<? extends Packet<?>>> IGNORE_PACKETS = new HashSet<>();
-    private static final Set<Class<? extends Packet<?>>> ALWAYS_HANDLING_PACKETS = new HashSet<>();
+    private static final Set<Class<? extends Packet<?>>> HEADER_PACKETS = new HashSet<>();
 
     static {
         // minecraft player update
         IGNORE_PACKETS.add(ClientboundSetHealthPacket.class);
         IGNORE_PACKETS.add(ClientboundSetExperiencePacket.class);
         IGNORE_PACKETS.add(ClientboundPlayerAbilitiesPacket.class);
-        IGNORE_PACKETS.add(ClientboundRespawnPacket.class);
+        IGNORE_PACKETS.add(ClientboundKeepAlivePacket.class);
 
         // recipe
         IGNORE_PACKETS.add(ClientboundRecipePacket.class);
@@ -39,17 +39,17 @@ public class RecordPacketFilter {
         // statistics
         IGNORE_PACKETS.add(ClientboundAwardStatsPacket.class);
 
-        // always handling (even not recording)
-        ALWAYS_HANDLING_PACKETS.add(ClientboundLoginPacket.class);
-        ALWAYS_HANDLING_PACKETS.add(ClientboundCustomPayloadPacket.class);
-        ALWAYS_HANDLING_PACKETS.add(ClientboundPlayerPositionPacket.class);
+        // packets for initialize. It is recorded always even if it is not being recorded.
+        HEADER_PACKETS.add(ClientboundLoginPacket.class);
+        HEADER_PACKETS.add(ClientboundCustomPayloadPacket.class);
+        HEADER_PACKETS.add(ClientboundPlayerPositionPacket.class);
     }
 
     public static boolean canHandle(Packet<?> packet) {
         return !IGNORE_PACKETS.contains(packet.getClass());
     }
 
-    public static boolean isAlwaysHandlingPacket(Packet<?> packet) {
-        return ALWAYS_HANDLING_PACKETS.contains(packet.getClass());
+    public static boolean isHeaderPacket(Packet<?> packet) {
+        return HEADER_PACKETS.contains(packet.getClass());
     }
 }

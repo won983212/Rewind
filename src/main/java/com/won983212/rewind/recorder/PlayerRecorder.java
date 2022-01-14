@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-// TODO 좀 코드 최적화 해야할듯
 public class PlayerRecorder {
     private final Player player;
     private final int updateInterval;
