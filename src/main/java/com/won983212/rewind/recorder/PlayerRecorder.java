@@ -50,7 +50,7 @@ public class PlayerRecorder {
         this.wasOnGround = player.isOnGround();
     }
 
-    public boolean isPlayerInvaild(){
+    public boolean isPlayerInvaild() {
         return player.isRemoved();
     }
 
