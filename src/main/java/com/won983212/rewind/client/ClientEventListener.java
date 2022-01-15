@@ -10,7 +10,6 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
@@ -60,12 +59,12 @@ public class ClientEventListener {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent e) {
-        ClientDist.RECORDER.worldTick();
-        ClientDist.REPLAYER.tick();
+        ClientDist.RECORDER.onWorldTick();
+        ClientDist.REPLAYER.onWorldTick();
     }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent e) {
-        ClientDist.RECORDER.playerTick(e.player);
+        ClientDist.RECORDER.onPlayerTick(e.player);
     }
 }

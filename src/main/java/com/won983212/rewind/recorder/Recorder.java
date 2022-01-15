@@ -28,6 +28,10 @@ public class Recorder {
     }
 
     public void start() {
+        if (Minecraft.getInstance().level == null) {
+            RewindMod.LOGGER.warn("Level is null");
+            return;
+        }
         if (!isRecording()) {
             try {
                 tickTime = 0;
@@ -58,13 +62,13 @@ public class Recorder {
         return packetWriter != null;
     }
 
-    public void worldTick() {
+    public void onWorldTick() {
         if (isRecording()) {
             tickTime++;
         }
     }
 
-    public void playerTick(Player player) {
+    public void onPlayerTick(Player player) {
         if (!isRecording()) {
             return;
         }

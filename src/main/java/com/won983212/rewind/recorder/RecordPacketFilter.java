@@ -40,9 +40,10 @@ public class RecordPacketFilter {
         IGNORE_PACKETS.add(ClientboundAwardStatsPacket.class);
 
         // packets for initialize. It is recorded always even if it is not being recorded.
-        HEADER_PACKETS.add(ClientboundLoginPacket.class);
         HEADER_PACKETS.add(ClientboundCustomPayloadPacket.class);
-        HEADER_PACKETS.add(ClientboundPlayerPositionPacket.class);
+        HEADER_PACKETS.add(ClientboundLoginPacket.class);
+        HEADER_PACKETS.add(ClientboundRespawnPacket.class);
+        HEADER_PACKETS.add(ClientboundUpdateTagsPacket.class);
     }
 
     public static boolean canHandle(Packet<?> packet) {

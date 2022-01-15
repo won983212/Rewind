@@ -70,7 +70,7 @@ public class Replayer {
         return packetReader != null;
     }
 
-    public void tick() {
+    public void onWorldTick() {
         if (!isReplaying() || nextSendTime > ++tickTime) {
             return;
         }

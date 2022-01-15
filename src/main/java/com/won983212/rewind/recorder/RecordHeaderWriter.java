@@ -6,6 +6,7 @@ import com.won983212.rewind.io.PacketByteBuffer;
 import com.won983212.rewind.io.PacketFileOutputStream;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -14,27 +15,40 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 public class RecordHeaderWriter {
     private final PacketByteBuffer initialPacketBuffer;
+    private ClientboundLoginPacket lastLoginPacket;
 
 
     public RecordHeaderWriter() {
         this.initialPacketBuffer = new PacketByteBuffer();
     }
 
-    // TODO 지옥에서 녹화 시작하면 에러. (login packet과 연관)
     public boolean handleHeaderPacket(Packet<?> packet) {
         if (RecordPacketFilter.isHeaderPacket(packet)) {
-            if (packet instanceof ClientboundLoginPacket) {
+            if (packet instanceof ClientboundLoginPacket loginPacket) {
                 initialPacketBuffer.getBuffer().clear();
+                lastLoginPacket = loginPacket;
+                return false;
+            }
+            if (packet instanceof ClientboundRespawnPacket respawnPacket) {
+                if (lastLoginPacket != null && lastLoginPacket.dimension() != respawnPacket.getDimension()) {
+                    lastLoginPacket = new ClientboundLoginPacket(-1, lastLoginPacket.hardcore(),
+                            GameType.SPECTATOR, null, lastLoginPacket.levels(), lastLoginPacket.registryHolder(),
+                            respawnPacket.getDimensionType(), respawnPacket.getDimension(), respawnPacket.getSeed(),
+                            0, lastLoginPacket.chunkRadius(), lastLoginPacket.simulationDistance(),
+                            lastLoginPacket.reducedDebugInfo(), lastLoginPacket.showDeathScreen(), lastLoginPacket.isDebug(),
+                            lastLoginPacket.isFlat());
+                }
+                return false;
             }
             writeToBuffer(packet);
             return true;
@@ -43,10 +57,26 @@ public class RecordHeaderWriter {
     }
 
     public void writeHeaderPacket(PacketFileOutputStream packetFileWriter) throws IOException {
+        recordLoginPacket(packetFileWriter);
         packetFileWriter.write(initialPacketBuffer);
         recordPlayers(packetFileWriter);
         recordCurrentLoadedChunk(packetFileWriter);
         recordPlayerPosition(packetFileWriter);
+    }
+
+    private void recordLoginPacket(PacketFileOutputStream packetFileWriter) throws IOException {
+        if (lastLoginPacket == null) {
+            throw new IOException("Not found login packet.");
+        }
+
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            throw new IOException("Level is null.");
+        }
+
+        ClientLevel.ClientLevelData data = level.getLevelData();
+        packetFileWriter.write(lastLoginPacket, 0);
+        packetFileWriter.write(new ClientboundChangeDifficultyPacket(data.getDifficulty(), data.isDifficultyLocked()), 0);
     }
 
     private void recordCurrentLoadedChunk(PacketFileOutputStream packetFileWriter) throws IOException {
