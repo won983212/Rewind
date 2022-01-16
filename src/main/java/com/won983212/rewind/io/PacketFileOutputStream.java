@@ -3,9 +3,10 @@ package com.won983212.rewind.io;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.protocol.Packet;
 
-import java.io.*;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class PacketFileOutputStream {
@@ -28,7 +29,7 @@ public class PacketFileOutputStream {
         packets.getBuffer().resetReaderIndex();
     }
 
-    // TODO (후순위) 좀 더 세련된 방식으로 buffering or 성능 개선 (in도 포함)
+    // TODO (후순위) Async하게 코드를 바꿔보자
     public void write(Packet<?> packet, int tick) throws IOException {
         buffer.write(packet, tick);
         if (buffer.getBuffer().readableBytes() > FLUSH_BYTES) {

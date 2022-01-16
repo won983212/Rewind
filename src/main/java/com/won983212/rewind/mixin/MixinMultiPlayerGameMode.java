@@ -30,7 +30,7 @@ public class MixinMultiPlayerGameMode {
     @Inject(method = "createPlayer(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/stats/StatsCounter;Lnet/minecraft/client/ClientRecipeBook;ZZ)Lnet/minecraft/client/player/LocalPlayer;", at = @At("HEAD"), cancellable = true)
     private void onCreatePlayer(ClientLevel level, StatsCounter counter, ClientRecipeBook book, boolean shiftDown, boolean sprinting, CallbackInfoReturnable<LocalPlayer> ci) {
         if (RewindMod.REPLAYER.isReplaying()) {
-            LocalPlayer player = new LocalPlayer(Minecraft.getInstance(), level, connection, counter, book, shiftDown, sprinting){
+            LocalPlayer player = new LocalPlayer(Minecraft.getInstance(), level, connection, counter, book, shiftDown, sprinting) {
                 @Override
                 public boolean canBeCollidedWith() {
                     return false;
