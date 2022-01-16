@@ -42,8 +42,14 @@ public class ClientEventListener {
                     RewindMod.RECORDER.stop();
                     chat.addMessage(new TextComponent("Record end."));
                 } else {
-                    RewindMod.RECORDER.start();
-                    chat.addMessage(new TextComponent("Record start."));
+                    chat.addMessage(new TextComponent("Record starting..."));
+                    RewindMod.RECORDER.startAsync()
+                            .whenComplete(($1, $2) ->
+                                    RewindMod.runAtMainThread(() -> chat.addMessage(new TextComponent("Record start."))))
+                            .exceptionally((t) -> {
+                                RewindMod.LOGGER.error(t);
+                                return null;
+                            });
                 }
             }
             if (screen instanceof TitleScreen) {

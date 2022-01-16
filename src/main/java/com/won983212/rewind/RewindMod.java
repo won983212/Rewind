@@ -4,6 +4,7 @@ import com.won983212.rewind.client.ClientDist;
 import com.won983212.rewind.recorder.Recorder;
 import com.won983212.rewind.replayer.Replayer;
 import com.won983212.rewind.server.ServerDist;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -22,6 +23,15 @@ public class RewindMod {
     public RewindMod() {
         proxy = DistExecutor.safeRunForDist(() -> ClientDist::new, () -> ServerDist::new);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
+    }
+
+    public static void runAtMainThread(Runnable r) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!mc.isSameThread()) {
+            mc.execute(r);
+        } else {
+            r.run();
+        }
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event) {

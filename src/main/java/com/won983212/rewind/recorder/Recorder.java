@@ -7,41 +7,52 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
-import net.minecraft.util.thread.BlockableEventLoop;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 public class Recorder {
     private final RecordHeaderWriter recordHeaderWriter;
     private PacketFileOutputStream packetWriter;
     private PlayerRecorder clientPlayerRecorder;
     private int tickTime;
+    private CompletableFuture<Void> preparingTask;
 
 
     public Recorder() {
         recordHeaderWriter = new RecordHeaderWriter();
     }
 
-    public void start() {
+    public CompletableFuture<Void> startAsync() {
         if (Minecraft.getInstance().level == null) {
-            RewindMod.LOGGER.warn("Level is null");
-            return;
+            return CompletableFuture.failedFuture(new RecordingFailedException("Level is null"));
+        }
+        if (preparingTask != null) {
+            return CompletableFuture.failedFuture(new RecordingFailedException("Already starting."));
         }
         if (!isRecording()) {
+            tickTime = 0;
             try {
-                tickTime = 0;
                 packetWriter = new PacketFileOutputStream(new File("C:/users/psvm/desktop/replay.pkt"));
-                recordHeaderWriter.writeHeaderPacket(packetWriter);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            preparingTask = CompletableFuture.runAsync(() -> {
+                try {
+                    recordHeaderWriter.writeHeaderPacket(packetWriter);
+                } catch (IOException e) {
+                    throw new RecordingFailedException(e);
+                }
+            });
+            preparingTask.whenComplete(($1, $2) -> preparingTask = null);
         } else {
-            RewindMod.LOGGER.warn("Already recording.");
+            return CompletableFuture.failedFuture(new RecordingFailedException("Already recording."));
         }
+        return preparingTask;
     }
 
     public void stop() {
@@ -58,7 +69,7 @@ public class Recorder {
     }
 
     public boolean isRecording() {
-        return packetWriter != null;
+        return packetWriter != null && preparingTask == null;
     }
 
     public void onWorldTick() {
@@ -89,12 +100,7 @@ public class Recorder {
         if (RewindMod.REPLAYER.isReplaying()) {
             return;
         }
-        BlockableEventLoop<Runnable> mc = Minecraft.getInstance();
-        if (!mc.isSameThread()) {
-            Minecraft.getInstance().execute(() -> writePacket(packet));
-        } else {
-            writePacket(packet);
-        }
+        RewindMod.runAtMainThread(() -> writePacket(packet));
     }
 
     private void writePacket(Packet<?> packet) {
