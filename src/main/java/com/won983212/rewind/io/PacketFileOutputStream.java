@@ -29,7 +29,6 @@ public class PacketFileOutputStream {
         packets.getBuffer().resetReaderIndex();
     }
 
-    // TODO (후순위) Async하게 코드를 바꿔보자
     public void write(Packet<?> packet, int tick) throws IOException {
         buffer.write(packet, tick);
         if (buffer.getBuffer().readableBytes() > FLUSH_BYTES) {

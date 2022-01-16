@@ -71,7 +71,7 @@ public class Replayer {
     }
 
     // TODO 중간으로 traversal 하는 기능
-    public void onWorldTick() {
+    public void onClientTick() {
         if (!isReplaying() || nextSendTime > ++tickTime) {
             return;
         }
@@ -107,9 +107,6 @@ public class Replayer {
         packetQueue = null;
         channelHandler.close();
         channel.close().awaitUninterruptibly();
-        if (mc.level != null) {
-            mc.clearLevel();
-        }
         mc.setScreen(null);
     }
 }

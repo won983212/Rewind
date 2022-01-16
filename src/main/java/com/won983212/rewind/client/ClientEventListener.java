@@ -25,7 +25,7 @@ import java.io.File;
 public class ClientEventListener {
 
     @SubscribeEvent
-    public static void onButtonClick(PlayerEvent.PlayerLoggedOutEvent event) {
+    public static void onLoggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event) {
         if (RewindMod.REPLAYER.isReplaying()) {
             RewindMod.REPLAYER.close();
         }
@@ -72,8 +72,8 @@ public class ClientEventListener {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent e) {
-        RewindMod.RECORDER.onWorldTick();
-        RewindMod.REPLAYER.onWorldTick();
+        RewindMod.RECORDER.onClientTick();
+        RewindMod.REPLAYER.onClientTick();
     }
 
     @SubscribeEvent
