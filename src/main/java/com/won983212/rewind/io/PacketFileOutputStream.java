@@ -3,23 +3,20 @@ package com.won983212.rewind.io;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.protocol.Packet;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.util.zip.GZIPOutputStream;
 
 public class PacketFileOutputStream {
     private static final int FLUSH_BYTES = 1 << 20; // 1MB
     private final PacketByteBuffer buffer;
-    private final FileOutputStream out;
-    private final FileChannel channel;
+    private final OutputStream out;
 
 
-    public PacketFileOutputStream(File file) throws FileNotFoundException {
+    public PacketFileOutputStream(File file) throws IOException {
         this.buffer = new PacketByteBuffer();
-        this.out = new FileOutputStream(file);
-        this.channel = out.getChannel();
+        this.out = new GZIPOutputStream(new FileOutputStream(file));
     }
 
     public void write(PacketByteBuffer packets) throws IOException {
@@ -32,7 +29,6 @@ public class PacketFileOutputStream {
     }
 
     // TODO (후순위) 좀 더 세련된 방식으로 buffering or 성능 개선 (in도 포함)
-    // TODO (후순위) 압축도 필요할 것임.
     public void write(Packet<?> packet, int tick) throws IOException {
         buffer.write(packet, tick);
         if (buffer.getBuffer().readableBytes() > FLUSH_BYTES) {
@@ -43,11 +39,10 @@ public class PacketFileOutputStream {
     public void close() throws IOException {
         flush();
         out.close();
-        channel.close();
     }
 
     public void flush() throws IOException {
         ByteBuf buf = buffer.getBuffer();
-        buf.readBytes(channel, buf.readableBytes());
+        buf.readBytes(out, buf.readableBytes());
     }
 }

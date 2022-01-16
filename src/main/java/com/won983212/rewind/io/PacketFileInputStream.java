@@ -5,17 +5,16 @@ import io.netty.buffer.Unpooled;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 public class PacketFileInputStream {
     private final PacketByteBuffer buffer;
 
 
     public PacketFileInputStream(File file) throws IOException {
-        FileChannel fileChannel = new FileInputStream(file).getChannel();
-        MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
-        this.buffer = new PacketByteBuffer(Unpooled.wrappedBuffer(mappedByteBuffer));
+        InputStream is = new GZIPInputStream(new FileInputStream(file));
+        this.buffer = new PacketByteBuffer(Unpooled.wrappedBuffer(is.readAllBytes()));
     }
 
     public boolean isEmpty() {
