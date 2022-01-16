@@ -2,6 +2,7 @@ package com.won983212.rewind.recorder;
 
 import com.mojang.datafixers.util.Pair;
 import com.won983212.rewind.RewindMod;
+import net.minecraft.core.SectionPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.Mth;
@@ -29,6 +30,7 @@ public class PlayerRecorder {
     private int yRotp;
     private int xRotp;
     private int yHeadRotp;
+    private SectionPos chunkp;
     private Vec3 motionp = Vec3.ZERO;
     private int tickCount;
     private int teleportDelay;

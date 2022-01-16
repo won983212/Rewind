@@ -70,6 +70,7 @@ public class Replayer {
         return packetReader != null;
     }
 
+    // TODO 중간으로 traversal 하는 기능
     public void onWorldTick() {
         if (!isReplaying() || nextSendTime > ++tickTime) {
             return;

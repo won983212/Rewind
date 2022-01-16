@@ -1,7 +1,6 @@
 package com.won983212.rewind.recorder;
 
 import com.won983212.rewind.RewindMod;
-import com.won983212.rewind.client.ClientDist;
 import com.won983212.rewind.io.PacketByteBuffer;
 import com.won983212.rewind.io.PacketFileOutputStream;
 import io.netty.buffer.Unpooled;
@@ -84,9 +83,12 @@ public class RecordHeaderWriter {
         if (mc.level == null || mc.player == null) {
             throw new IOException("Can't record world chunks.");
         }
+
         int viewDist = mc.options.renderDistance;
         ChunkPos chunkPos = mc.player.chunkPosition();
         LevelLightEngine lightEngine = mc.level.getLightEngine();
+
+        packetFileWriter.write(new ClientboundSetChunkCacheCenterPacket(chunkPos.x, chunkPos.z), 0);
         for (int chunkX = chunkPos.x - viewDist - 1; chunkX <= chunkPos.x + viewDist + 1; ++chunkX) {
             for (int chunkZ = chunkPos.z - viewDist - 1; chunkZ <= chunkPos.z + viewDist + 1; ++chunkZ) {
                 if (!ChunkMap.isChunkInRange(chunkX, chunkZ, chunkPos.x, chunkPos.z, viewDist)) {
@@ -109,7 +111,7 @@ public class RecordHeaderWriter {
             throw new IOException("Can't record players.");
         }
         ClientPacketListener listener = mc.getConnection();
-        if (listener == null || ClientDist.REPLAYER.isReplaying()) {
+        if (listener == null || RewindMod.REPLAYER.isReplaying()) {
             throw new IOException("listener is null");
         }
         for (AbstractClientPlayer player : mc.level.players()) {

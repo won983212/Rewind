@@ -1,6 +1,6 @@
 package com.won983212.rewind.mixin;
 
-import com.won983212.rewind.client.ClientDist;
+import com.won983212.rewind.RewindMod;
 import com.won983212.rewind.recorder.PacketInterceptor;
 import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
 import net.minecraft.network.Connection;
@@ -21,9 +21,9 @@ public class MixinClientHandshakePacketListener {
 
     @Inject(method = "handleGameProfile", at = @At("HEAD"))
     private void onLogin(ClientboundGameProfilePacket packet, CallbackInfo ci) {
-        if (!ClientDist.REPLAYER.isReplaying()) {
+        if (!RewindMod.REPLAYER.isReplaying()) {
             connection.channel().pipeline()
-                    .addBefore("packet_handler", "packet_recorder", new PacketInterceptor(ClientDist.RECORDER::handlePacket));
+                    .addBefore("packet_handler", "packet_recorder", new PacketInterceptor(RewindMod.RECORDER::handlePacket));
         }
     }
 }

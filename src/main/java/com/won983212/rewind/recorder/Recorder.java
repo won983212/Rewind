@@ -1,7 +1,6 @@
 package com.won983212.rewind.recorder;
 
 import com.won983212.rewind.RewindMod;
-import com.won983212.rewind.client.ClientDist;
 import com.won983212.rewind.io.PacketFileOutputStream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.Packet;
@@ -87,7 +86,7 @@ public class Recorder {
         if (!isRecording() && !RecordPacketFilter.isHeaderPacket(packet)) {
             return;
         }
-        if (ClientDist.REPLAYER.isReplaying()) {
+        if (RewindMod.REPLAYER.isReplaying()) {
             return;
         }
         BlockableEventLoop<Runnable> mc = Minecraft.getInstance();

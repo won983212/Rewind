@@ -1,6 +1,6 @@
 package com.won983212.rewind.mixin;
 
-import com.won983212.rewind.client.ClientDist;
+import com.won983212.rewind.RewindMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -17,7 +17,7 @@ public class MixinLevelRenderer {
     private void onDestroyBlockProgress(int id, BlockPos pos, int progress, CallbackInfo ci) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && id == player.getId()) {
-            ClientDist.RECORDER.handlePacket(new ClientboundBlockDestructionPacket(id, pos, progress));
+            RewindMod.RECORDER.handlePacket(new ClientboundBlockDestructionPacket(id, pos, progress));
         }
     }
 }

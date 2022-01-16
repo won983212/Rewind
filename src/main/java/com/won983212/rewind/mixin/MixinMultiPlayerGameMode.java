@@ -1,7 +1,6 @@
 package com.won983212.rewind.mixin;
 
 import com.won983212.rewind.RewindMod;
-import com.won983212.rewind.client.ClientDist;
 import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -30,7 +29,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "createPlayer(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/stats/StatsCounter;Lnet/minecraft/client/ClientRecipeBook;ZZ)Lnet/minecraft/client/player/LocalPlayer;", at = @At("HEAD"), cancellable = true)
     private void onCreatePlayer(ClientLevel level, StatsCounter counter, ClientRecipeBook book, boolean shiftDown, boolean sprinting, CallbackInfoReturnable<LocalPlayer> ci) {
-        if (ClientDist.REPLAYER.isReplaying()) {
+        if (RewindMod.REPLAYER.isReplaying()) {
             LocalPlayer player = new LocalPlayer(Minecraft.getInstance(), level, connection, counter, book, shiftDown, sprinting){
                 @Override
                 public boolean canBeCollidedWith() {
