@@ -51,9 +51,12 @@ public class ClientEventListener {
                                 return null;
                             });
                 }
+                return;
             }
             if (screen instanceof TitleScreen) {
                 RewindMod.REPLAYER.startReplay(new File("C:/users/psvm/desktop/replay.pkt"));
+            } else if(RewindMod.REPLAYER.isReplaying()){
+                RewindMod.REPLAYER.restart();
             }
         }
     }

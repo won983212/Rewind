@@ -24,4 +24,8 @@ public class PacketFileInputStream {
     public PacketByteBuffer.PacketData read() throws IOException {
         return buffer.read();
     }
+
+    public void resetReaderIndex() {
+        buffer.getBuffer().readerIndex(0);
+    }
 }

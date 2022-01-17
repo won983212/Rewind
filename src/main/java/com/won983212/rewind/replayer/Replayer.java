@@ -31,9 +31,19 @@ public class Replayer {
 
 
     public void startReplay(File input) {
+        try {
+            startReplay(new PacketFileInputStream(input));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void startReplay(PacketFileInputStream in) {
         Minecraft mc = Minecraft.getInstance();
         GenericDirtMessageScreen screen = new GenericDirtMessageScreen(Lang.getComponent("connection.load"));
         mc.setScreen(screen);
+
+        packetReader = in;
 
         Connection connection = new Connection(PacketFlow.CLIENTBOUND) {
             @Override
@@ -45,14 +55,6 @@ public class Replayer {
         connection.setListener(new ClientHandshakePacketListenerImpl(connection, mc, null, $ -> {
         }));
 
-        try {
-            packetReader = new PacketFileInputStream(input);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        ((MixinMinecraft) mc).setConnection(connection);
-
         channelHandler = new RewindChannelHandler();
         channel = new EmbeddedChannel();
         channel.pipeline().addLast("rewind_packet_handler", channelHandler)
@@ -60,6 +62,8 @@ public class Replayer {
                 .fireChannelActive();
         channel.attr(AttributeKey.valueOf("fml:netversion")).set(NetworkConstants.FMLNETMARKER);
         channel.writeInbound(new ClientboundGameProfilePacket(mc.getUser().getGameProfile()));
+
+        ((MixinMinecraft) mc).setConnection(connection);
 
         packetQueue = null;
         tickTime = 0;
@@ -70,7 +74,7 @@ public class Replayer {
         return packetReader != null;
     }
 
-    // TODO 중간으로 traversal 하는 기능
+    // TODO (후순위) 더 빠르게 중간으로 traversal 하는 기능
     public void onClientTick() {
         if (!isReplaying() || nextSendTime > ++tickTime) {
             return;
@@ -108,5 +112,12 @@ public class Replayer {
         channelHandler.close();
         channel.close().awaitUninterruptibly();
         mc.setScreen(null);
+    }
+
+    public void restart() {
+        PacketFileInputStream in = packetReader;
+        in.resetReaderIndex();
+        close();
+        startReplay(in);
     }
 }
