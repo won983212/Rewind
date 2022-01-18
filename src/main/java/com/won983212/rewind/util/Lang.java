@@ -6,7 +6,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 
 public class Lang {
     public static String getString(String childKey, Object... args) {
-        return String.format(RewindMod.MODID + "." + Language.getInstance().getOrDefault(childKey), args);
+        return String.format(Language.getInstance().getOrDefault(RewindMod.MODID + "." + childKey), args);
     }
 
     public static TranslatableComponent getComponent(String childKey, Object... args) {

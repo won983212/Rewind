@@ -2,17 +2,19 @@ package com.won983212.rewind.client;
 
 import com.won983212.rewind.RewindMod;
 import com.won983212.rewind.recorder.Recorder;
+import com.won983212.rewind.ui.screen.RecordingStatusScreen;
+import com.won983212.rewind.util.Lang;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -23,11 +25,30 @@ import java.io.File;
 
 @Mod.EventBusSubscriber(modid = RewindMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEventListener {
+    private static RecordingStatusScreen recordingStatusScreen;
+
 
     @SubscribeEvent
     public static void onLoggedOut(ClientPlayerNetworkEvent.LoggedOutEvent event) {
         if (RewindMod.REPLAYER.isReplaying()) {
             RewindMod.REPLAYER.close();
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIngameRender(RenderGameOverlayEvent.Post event) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.CHAT) {
+            return;
+        }
+
+        if (recordingStatusScreen != null) {
+            Minecraft mc = Minecraft.getInstance();
+            int x = (int) (mc.mouseHandler.xpos() * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth());
+            int y = (int) (mc.mouseHandler.ypos() * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight());
+            recordingStatusScreen.render(event.getMatrixStack(), x, y, event.getPartialTicks());
+            if (recordingStatusScreen.isDestroyed()) {
+                recordingStatusScreen = null;
+            }
         }
     }
 
@@ -40,12 +61,16 @@ public class ClientEventListener {
                 ChatComponent chat = Minecraft.getInstance().gui.getChat();
                 if (RewindMod.RECORDER.isRecording()) {
                     RewindMod.RECORDER.stop();
-                    chat.addMessage(new TextComponent("Record end."));
+                    recordingStatusScreen.animateHide();
                 } else {
-                    chat.addMessage(new TextComponent("Record starting..."));
+                    chat.addMessage(Lang.getComponent("record_starting"));
                     RewindMod.RECORDER.startAsync()
                             .whenComplete(($1, $2) ->
-                                    RewindMod.runAtMainThread(() -> chat.addMessage(new TextComponent("Record start."))))
+                                    RewindMod.runAtMainThread(() -> {
+                                        recordingStatusScreen = new RecordingStatusScreen();
+                                        recordingStatusScreen.animateShow();
+                                        chat.addMessage(Lang.getComponent("recording"));
+                                    }))
                             .exceptionally((t) -> {
                                 RewindMod.LOGGER.error(t);
                                 return null;
@@ -55,7 +80,7 @@ public class ClientEventListener {
             }
             if (screen instanceof TitleScreen) {
                 RewindMod.REPLAYER.startReplay(new File("C:/users/psvm/desktop/replay.pkt"));
-            } else if(RewindMod.REPLAYER.isReplaying()){
+            } else if (RewindMod.REPLAYER.isReplaying()) {
                 RewindMod.REPLAYER.restart();
             }
         }
