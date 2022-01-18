@@ -72,6 +72,10 @@ public class Recorder {
         return packetWriter != null && preparingTask == null;
     }
 
+    public int getTickTime() {
+        return tickTime;
+    }
+
     public void onClientTick() {
         if (isRecording()) {
             tickTime++;

@@ -3,9 +3,7 @@ package com.won983212.rewind.client;
 import com.won983212.rewind.RewindMod;
 import com.won983212.rewind.recorder.Recorder;
 import com.won983212.rewind.ui.screen.RecordingStatusScreen;
-import com.won983212.rewind.util.Lang;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
@@ -45,6 +43,7 @@ public class ClientEventListener {
             Minecraft mc = Minecraft.getInstance();
             int x = (int) (mc.mouseHandler.xpos() * (double) mc.getWindow().getGuiScaledWidth() / (double) mc.getWindow().getScreenWidth());
             int y = (int) (mc.mouseHandler.ypos() * (double) mc.getWindow().getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight());
+
             recordingStatusScreen.render(event.getMatrixStack(), x, y, event.getPartialTicks());
             if (recordingStatusScreen.isDestroyed()) {
                 recordingStatusScreen = null;
@@ -52,24 +51,25 @@ public class ClientEventListener {
         }
     }
 
-    // TODO 이제 이 방식 말고 실제로 사용할 수 있도록 바꿔보자
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event) {
         if (event.getAction() == GLFW.GLFW_PRESS && event.getKey() == GLFW.GLFW_KEY_SEMICOLON) {
             Screen screen = Minecraft.getInstance().screen;
             if (screen == null && !RewindMod.REPLAYER.isReplaying()) {
-                ChatComponent chat = Minecraft.getInstance().gui.getChat();
                 if (RewindMod.RECORDER.isRecording()) {
                     RewindMod.RECORDER.stop();
-                    recordingStatusScreen.animateHide();
+                    if (recordingStatusScreen != null) {
+                        recordingStatusScreen.animateHide();
+                    }
                 } else {
-                    chat.addMessage(Lang.getComponent("record_starting"));
+                    recordingStatusScreen = new RecordingStatusScreen();
+                    recordingStatusScreen.animateShow();
                     RewindMod.RECORDER.startAsync()
                             .whenComplete(($1, $2) ->
                                     RewindMod.runAtMainThread(() -> {
-                                        recordingStatusScreen = new RecordingStatusScreen();
-                                        recordingStatusScreen.animateShow();
-                                        chat.addMessage(Lang.getComponent("recording"));
+                                        if (recordingStatusScreen != null) {
+                                            recordingStatusScreen.setRecordingStage();
+                                        }
                                     }))
                             .exceptionally((t) -> {
                                 RewindMod.LOGGER.error(t);

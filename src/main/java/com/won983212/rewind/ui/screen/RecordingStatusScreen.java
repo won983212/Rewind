@@ -1,6 +1,7 @@
 package com.won983212.rewind.ui.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.won983212.rewind.RewindMod;
 import com.won983212.rewind.ui.animate.EasingFunction;
 import com.won983212.rewind.ui.animate.InterpolatedFloat;
 import com.won983212.rewind.ui.animate.InterpolatedValue;
@@ -12,6 +13,8 @@ public class RecordingStatusScreen extends AbstractScreen {
 
     private InterpolatedValue<Float> yPosition;
     private boolean destroyed = false;
+    private boolean isStarted = false;
+    private TextLabel label;
 
     protected void init() {
         this.yPosition = new InterpolatedFloat(10f, 10f, 0);
@@ -19,7 +22,12 @@ public class RecordingStatusScreen extends AbstractScreen {
         this.rootPanel.setPosition(10, -20);
         this.rootPanel.setBackgroundColor(0x99000000);
         this.rootPanel.addComponent(new RecordingIndicator().setBounds(0, 0, 9, 9));
-        this.rootPanel.addComponent(new TextLabel(Lang.getString("recording")).setX(15));
+        this.rootPanel.addComponent(label = (TextLabel) new TextLabel(Lang.getString("record.starting")).setX(15));
+    }
+
+    public void setRecordingStage() {
+        label.setText("00:00:00");
+        isStarted = true;
     }
 
     public void animateShow() {
@@ -35,6 +43,9 @@ public class RecordingStatusScreen extends AbstractScreen {
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        if (isStarted && RewindMod.RECORDER.isRecording()) {
+            label.setText(Lang.tickToTimeString(RewindMod.RECORDER.getTickTime()));
+        }
         rootPanel.setY(yPosition.tickAndGet(partialTicks));
         super.render(poseStack, mouseX, mouseY, partialTicks);
     }

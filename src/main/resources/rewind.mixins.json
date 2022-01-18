@@ -11,7 +11,8 @@
     "MixinClientLevel",
     "MixinLevelRenderer",
     "MixinMinecraft",
-    "MixinMultiPlayerGameMode"
+    "MixinMultiPlayerGameMode",
+    "MixinTimer"
   ],
   "injectors": {
     "defaultRequire": 1
