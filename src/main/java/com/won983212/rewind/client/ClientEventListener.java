@@ -3,6 +3,7 @@ package com.won983212.rewind.client;
 import com.won983212.rewind.RewindMod;
 import com.won983212.rewind.recorder.Recorder;
 import com.won983212.rewind.ui.screen.RecordingStatusScreen;
+import com.won983212.rewind.ui.screen.ReplayListScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -18,8 +19,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
-
-import java.io.File;
 
 @Mod.EventBusSubscriber(modid = RewindMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEventListener {
@@ -51,6 +50,7 @@ public class ClientEventListener {
         }
     }
 
+    // TODO Key 설정 가능하도록
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event) {
         if (event.getAction() == GLFW.GLFW_PRESS && event.getKey() == GLFW.GLFW_KEY_SEMICOLON) {
@@ -79,9 +79,7 @@ public class ClientEventListener {
                 return;
             }
             if (screen instanceof TitleScreen) {
-                RewindMod.REPLAYER.startReplay(new File("C:/users/psvm/desktop/replay.pkt"));
-            } else if (RewindMod.REPLAYER.isReplaying()) {
-                RewindMod.REPLAYER.restart();
+                Minecraft.getInstance().setScreen(new ReplayListScreen());
             }
         }
     }

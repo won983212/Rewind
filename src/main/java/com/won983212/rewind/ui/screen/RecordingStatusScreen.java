@@ -8,6 +8,7 @@ import com.won983212.rewind.ui.animate.InterpolatedValue;
 import com.won983212.rewind.ui.component.RecordingIndicator;
 import com.won983212.rewind.ui.component.TextLabel;
 import com.won983212.rewind.util.Lang;
+import org.jetbrains.annotations.NotNull;
 
 public class RecordingStatusScreen extends AbstractScreen {
 
@@ -15,6 +16,11 @@ public class RecordingStatusScreen extends AbstractScreen {
     private boolean destroyed = false;
     private boolean isStarted = false;
     private TextLabel label;
+
+
+    public RecordingStatusScreen() {
+        super(Lang.getComponent("title.record_status"));
+    }
 
     protected void init() {
         this.yPosition = new InterpolatedFloat(10f, 10f, 0);
@@ -42,7 +48,7 @@ public class RecordingStatusScreen extends AbstractScreen {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         if (isStarted && RewindMod.RECORDER.isRecording()) {
             label.setText(Lang.tickToTimeString(RewindMod.RECORDER.getTickTime()));
         }

@@ -10,6 +10,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 public class Lang {
     private static float msPerTicks = 0;
 
+    // TODO (후순위) en_us, ko_kr 준비하기
     public static String getString(String childKey, Object... args) {
         return String.format(Language.getInstance().getOrDefault(RewindMod.MODID + "." + childKey), args);
     }

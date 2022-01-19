@@ -1,16 +1,25 @@
 package com.won983212.rewind.ui.component;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 @SuppressWarnings("UnusedReturnValue")
-public class ComponentPanel extends AbstractComponent {
+public class ComponentPanel extends AbstractComponent implements ContainerEventHandler {
     private int margin;
     private int backgroundColor;
     private final List<AbstractComponent> components;
     private boolean needsUpdateSize;
+
+    @Nullable
+    private AbstractComponent focused;
+    private boolean isDragging;
+
 
     public ComponentPanel() {
         this.components = Lists.newArrayList();
@@ -22,10 +31,6 @@ public class ComponentPanel extends AbstractComponent {
         component.setParent(this);
         this.components.add(component);
         invalidateSize();
-    }
-
-    public Iterable<AbstractComponent> getComponents() {
-        return components;
     }
 
     public ComponentPanel setMargin(int margin) {
@@ -89,5 +94,32 @@ public class ComponentPanel extends AbstractComponent {
             component.render(poseStack, mouseX, mouseY, partialTicks);
         }
         poseStack.popPose();
+    }
+
+    @Override
+    @NotNull
+    public List<? extends GuiEventListener> children() {
+        return components;
+    }
+
+    @Override
+    public boolean isDragging() {
+        return this.isDragging;
+    }
+
+    @Override
+    public void setDragging(boolean dragging) {
+        this.isDragging = dragging;
+    }
+
+    @Nullable
+    @Override
+    public GuiEventListener getFocused() {
+        return focused;
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener component) {
+        this.focused = (AbstractComponent) component;
     }
 }

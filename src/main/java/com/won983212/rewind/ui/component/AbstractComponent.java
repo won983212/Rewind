@@ -97,6 +97,11 @@ public abstract class AbstractComponent implements GuiEventListener {
         return this;
     }
 
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
     public static void fillFloat(PoseStack poseStack, float minX, float minY, float maxX, float maxY, int color) {
         if (minX < maxX) {
             float temp = minX;
