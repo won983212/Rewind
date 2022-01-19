@@ -16,7 +16,8 @@ public class RecordingIndicator extends AbstractComponent {
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        AbstractComponent.fillFloat(poseStack, x, y, x + width, y + height, 0x77ff0000);
-        AbstractComponent.fillFloat(poseStack, x + 2, y + 2, x + width - 2, y + height - 2, color.tickAndGet(partialTicks).getArgb());
+        super.render(poseStack, mouseX, mouseY, partialTicks);
+        AbstractComponent.fillFloat(poseStack, 0, 0, width, height, 0x77ff0000);
+        AbstractComponent.fillFloat(poseStack, 2, 2, width - 2, height - 2, color.tickAndGet(partialTicks).getArgb());
     }
 }

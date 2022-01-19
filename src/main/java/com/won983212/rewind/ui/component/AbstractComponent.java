@@ -3,6 +3,7 @@ package com.won983212.rewind.ui.component;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
+import com.won983212.rewind.ui.component.panel.Panel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -12,16 +13,22 @@ import net.minecraft.client.renderer.GameRenderer;
 public abstract class AbstractComponent implements GuiEventListener {
     protected final Font font = Minecraft.getInstance().font;
 
-    protected ComponentPanel parent;
+    protected boolean hasChangedSize = true;
+    protected Panel parent;
     protected float x;
     protected float y;
     protected float width;
     protected float height;
 
 
-    public abstract void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        if (hasChangedSize) {
+            updateSize();
+            hasChangedSize = false;
+        }
+    }
 
-    protected void setParent(ComponentPanel parent) {
+    public void setParent(Panel parent) {
         this.parent = parent;
     }
 
@@ -45,6 +52,13 @@ public abstract class AbstractComponent implements GuiEventListener {
         if (parent != null) {
             parent.invalidateSize();
         }
+    }
+
+    protected void updateSize() {
+    }
+
+    protected void invalidateSize() {
+        hasChangedSize = true;
     }
 
     public AbstractComponent setX(float x) {
@@ -100,6 +114,16 @@ public abstract class AbstractComponent implements GuiEventListener {
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
+    public static String ellipsisText(Font font, String str, int width) {
+        int sizeStr = font.width(str);
+        int sizeDots = font.width("...");
+        if (sizeStr > width) {
+            str = font.plainSubstrByWidth(str, width - sizeDots);
+            str += "...";
+        }
+        return str;
     }
 
     public static void fillFloat(PoseStack poseStack, float minX, float minY, float maxX, float maxY, int color) {

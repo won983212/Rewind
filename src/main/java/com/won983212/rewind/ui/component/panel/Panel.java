@@ -1,6 +1,7 @@
-package com.won983212.rewind.ui.component;
+package com.won983212.rewind.ui.component.panel;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.won983212.rewind.ui.component.AbstractComponent;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.commons.compress.utils.Lists;
@@ -10,18 +11,17 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 @SuppressWarnings("UnusedReturnValue")
-public class ComponentPanel extends AbstractComponent implements ContainerEventHandler {
+public class Panel extends AbstractComponent implements ContainerEventHandler {
     private int margin;
     private int backgroundColor;
     private final List<AbstractComponent> components;
-    private boolean needsUpdateSize;
 
     @Nullable
     private AbstractComponent focused;
     private boolean isDragging;
 
 
-    public ComponentPanel() {
+    public Panel() {
         this.components = Lists.newArrayList();
         setBackgroundColor(0);
         setMargin(2);
@@ -33,7 +33,7 @@ public class ComponentPanel extends AbstractComponent implements ContainerEventH
         invalidateSize();
     }
 
-    public ComponentPanel setMargin(int margin) {
+    public Panel setMargin(int margin) {
         if (this.margin != margin) {
             this.margin = margin;
             invalidateSize();
@@ -41,22 +41,22 @@ public class ComponentPanel extends AbstractComponent implements ContainerEventH
         return this;
     }
 
-    public ComponentPanel setBackgroundColor(int color) {
+    public Panel setBackgroundColor(int color) {
         this.backgroundColor = color;
         return this;
     }
 
     public void invalidateSize() {
-        ComponentPanel current = this;
-        while (current != null) {
-            current.needsUpdateSize = true;
-            current = current.parent;
+        super.invalidateSize();
+        if (parent != null) {
+            parent.invalidateSize();
         }
     }
 
-    private void packSize() {
+    @Override
+    protected void updateSize() {
         if (parent != null) {
-            parent.packSize();
+            parent.updateSize();
             return;
         }
         packSizeImpl();
@@ -67,31 +67,30 @@ public class ComponentPanel extends AbstractComponent implements ContainerEventH
         float maxY = 0;
 
         for (AbstractComponent component : components) {
-            if (component instanceof ComponentPanel componentPanel
-                    && componentPanel.needsUpdateSize) {
-                componentPanel.packSizeImpl();
+            if (component instanceof Panel panel && panel.hasChangedSize) {
+                panel.packSizeImpl();
             }
-            maxX = Math.max(maxX, component.x + component.width);
-            maxY = Math.max(maxY, component.y + component.height);
+            maxX = Math.max(maxX, component.getX() + component.getWidth());
+            maxY = Math.max(maxY, component.getY() + component.getHeight());
         }
 
         setSize(maxX + margin * 2, maxY + margin * 2);
-        needsUpdateSize = false;
+        hasChangedSize = false;
     }
 
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        if (needsUpdateSize) {
-            packSize();
-        }
+        super.render(poseStack, mouseX, mouseY, partialTicks);
 
         if (((backgroundColor >> 24) & 0xff) > 0) {
-            AbstractComponent.fillFloat(poseStack, x, y, x + width, y + height, backgroundColor);
+            AbstractComponent.fillFloat(poseStack, 0, 0, width, height, backgroundColor);
         }
 
         poseStack.pushPose();
-        poseStack.translate(x + margin, y + margin, 0);
+        poseStack.translate(margin, margin, 0);
         for (AbstractComponent component : components) {
+            poseStack.translate(component.getX(), component.getY(), 0);
             component.render(poseStack, mouseX, mouseY, partialTicks);
+            poseStack.translate(-component.getX(), -component.getY(), 0);
         }
         poseStack.popPose();
     }

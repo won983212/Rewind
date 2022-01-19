@@ -1,23 +1,59 @@
 package com.won983212.rewind.ui.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.won983212.rewind.ui.component.ComponentPanel;
+import com.won983212.rewind.ui.component.panel.Panel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 public class AbstractScreen extends Screen {
-    protected ComponentPanel rootPanel;
+    protected Panel rootPanel;
+    protected Screen parent;
+    private boolean drawBackground;
 
 
     public AbstractScreen(Component title) {
         super(title);
-        this.rootPanel = new ComponentPanel();
+        this.parent = Minecraft.getInstance().screen;
+        this.drawBackground = true;
+        this.rootPanel = new Panel();
+    }
+
+    protected void init(Panel rootPanel) {
+    }
+
+    public void disableDrawBackground() {
+        drawBackground = false;
+    }
+
+    @Override
+    protected void init() {
+        rootPanel = new Panel();
+        init(rootPanel);
     }
 
     @Override
     public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        if (parent != null) {
+            parent.render(poseStack, 0, 0, partialTicks);
+        }
+
+        poseStack.pushPose();
+        poseStack.translate(rootPanel.getX(), rootPanel.getY(), 2);
+        if (drawBackground) {
+            poseStack.translate(0, 0, 2);
+            fillGradient(poseStack, 0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
+        }
         rootPanel.render(poseStack, mouseX, mouseY, partialTicks);
+        poseStack.popPose();
+    }
+
+    @Override
+    public void tick() {
+        if (parent != null) {
+            parent.tick();
+        }
     }
 
     @Override

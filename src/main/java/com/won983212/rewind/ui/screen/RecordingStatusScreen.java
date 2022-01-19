@@ -5,8 +5,9 @@ import com.won983212.rewind.RewindMod;
 import com.won983212.rewind.ui.animate.EasingFunction;
 import com.won983212.rewind.ui.animate.InterpolatedFloat;
 import com.won983212.rewind.ui.animate.InterpolatedValue;
+import com.won983212.rewind.ui.component.panel.Panel;
+import com.won983212.rewind.ui.component.Label;
 import com.won983212.rewind.ui.component.RecordingIndicator;
-import com.won983212.rewind.ui.component.TextLabel;
 import com.won983212.rewind.util.Lang;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,20 +16,21 @@ public class RecordingStatusScreen extends AbstractScreen {
     private InterpolatedValue<Float> yPosition;
     private boolean destroyed = false;
     private boolean isStarted = false;
-    private TextLabel label;
+    private Label label;
 
 
     public RecordingStatusScreen() {
         super(Lang.getComponent("title.record_status"));
+        init();
     }
 
-    protected void init() {
+    protected void init(Panel rootPanel) {
         this.yPosition = new InterpolatedFloat(10f, 10f, 0);
-        this.rootPanel.setMargin(4);
-        this.rootPanel.setPosition(10, -20);
-        this.rootPanel.setBackgroundColor(0x99000000);
-        this.rootPanel.addComponent(new RecordingIndicator().setBounds(0, 0, 9, 9));
-        this.rootPanel.addComponent(label = (TextLabel) new TextLabel(Lang.getString("record.starting")).setX(15));
+        rootPanel.setMargin(4);
+        rootPanel.setPosition(10, -20);
+        rootPanel.setBackgroundColor(0x99000000);
+        rootPanel.addComponent(new RecordingIndicator().setBounds(0, 0, 9, 9));
+        rootPanel.addComponent(label = (Label) new Label(Lang.getString("record.starting")).setX(15));
     }
 
     public void setRecordingStage() {
