@@ -1,21 +1,19 @@
 package com.won983212.rewind.ui.component;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.won983212.rewind.mixin.MixinMinecraft;
-import net.minecraft.client.Minecraft;
+import com.won983212.rewind.util.UIUtils;
+import net.minecraft.network.chat.TextComponent;
 
 @SuppressWarnings("UnusedReturnValue")
-public class Label extends AbstractComponent {
+public class Label extends AbstractStyledComponent {
     private String text;
-    private float scale;
-    private int foreground;
+    private float scale = 1;
     private float maxWidth = -1;
+    private boolean useWrapping = false;
     private boolean useDefaultFont = false;
 
 
     public Label(String text) {
-        this.foreground = 0xffffffff;
-        this.scale = 1;
         this.setText(text);
     }
 
@@ -24,78 +22,85 @@ public class Label extends AbstractComponent {
             text = "";
         }
         this.text = text;
-        invalidateSize();
+        calculateSize();
         return this;
     }
 
-    @Override
-    protected void updateSize() {
+    private void calculateSize() {
         if (useDefaultFont) {
-            setToDefaultFont();
+            UIUtils.setToDefaultFont();
         }
 
         float width = maxWidth;
         if (width == -1) {
             width = font.width(text) * scale;
         }
-        this.setSize(width, font.lineHeight * scale);
+
+        int lineSize = 1;
+        if (useWrapping) {
+            lineSize = font.split(new TextComponent(text), 100).size();
+        }
+
+        setPreferredMinimalSize(width, font.lineHeight * lineSize * scale);
+        invalidateSize();
 
         if (useDefaultFont) {
-            setToMinecraftFont();
+            UIUtils.setToMinecraftFont();
         }
     }
 
     public Label useDefaultFont() {
         useDefaultFont = true;
-        invalidateSize();
+        calculateSize();
+        return this;
+    }
+
+    public Label useWrapping() {
+        useWrapping = true;
+        calculateSize();
         return this;
     }
 
     public Label setMaxWidth(float width) {
         this.maxWidth = width;
-        invalidateSize();
+        calculateSize();
         return this;
     }
 
     public Label setScale(float scale) {
         this.scale = scale;
-        invalidateSize();
+        calculateSize();
         return this;
-    }
-
-    public Label setForeground(int color) {
-        this.foreground = color;
-        return this;
-    }
-
-    private void setToDefaultFont() {
-        ((MixinMinecraft) Minecraft.getInstance()).invokeSelectMainFont(false);
-    }
-
-    private void setToMinecraftFont() {
-        Minecraft mc = Minecraft.getInstance();
-        ((MixinMinecraft) mc).invokeSelectMainFont(mc.isEnforceUnicode());
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        super.render(poseStack, mouseX, mouseY, partialTicks);
+    public void renderComponent(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         if (useDefaultFont) {
-            setToDefaultFont();
+            UIUtils.setToDefaultFont();
         }
 
-        String ellipsisText = AbstractComponent.ellipsisText(font, text, (int) (width / scale));
+        String text = this.text;
+        if (!useWrapping) {
+            text = UIUtils.ellipsisText(font, this.text, (int) (getWidth() / scale));
+        }
+
         if (scale != 1) {
             poseStack.pushPose();
             poseStack.scale(scale, scale, scale);
-            font.draw(poseStack, ellipsisText, 0, 0, foreground);
-            poseStack.popPose();
+        }
+
+        if (useWrapping) {
+            UIUtils.drawText(font, poseStack, text, 0, 0, foregroundColor.getArgb(), 0, (int) getWidth());
         } else {
-            font.draw(poseStack, ellipsisText, 0, 0, foreground);
+            UIUtils.drawText(font, poseStack, text, 0, 0, foregroundColor.getArgb());
+        }
+
+        if (scale != 1) {
+            poseStack.popPose();
         }
 
         if (useDefaultFont) {
-            setToMinecraftFont();
+            UIUtils.setToMinecraftFont();
         }
     }
 }

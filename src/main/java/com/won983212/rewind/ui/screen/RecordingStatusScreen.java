@@ -2,16 +2,21 @@ package com.won983212.rewind.ui.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.won983212.rewind.RewindMod;
+import com.won983212.rewind.ui.Theme;
+import com.won983212.rewind.ui.UIScreen;
+import com.won983212.rewind.ui.Arrange;
+import com.won983212.rewind.ui.VerticalArrange;
 import com.won983212.rewind.ui.animate.EasingFunction;
 import com.won983212.rewind.ui.animate.InterpolatedFloat;
 import com.won983212.rewind.ui.animate.InterpolatedValue;
-import com.won983212.rewind.ui.component.panel.Panel;
 import com.won983212.rewind.ui.component.Label;
 import com.won983212.rewind.ui.component.RecordingIndicator;
+import com.won983212.rewind.ui.decorator.SolidBackground;
+import com.won983212.rewind.ui.component.panel.Panel;
 import com.won983212.rewind.util.Lang;
 import org.jetbrains.annotations.NotNull;
 
-public class RecordingStatusScreen extends AbstractScreen {
+public class RecordingStatusScreen extends UIScreen {
 
     private InterpolatedValue<Float> yPosition;
     private boolean destroyed = false;
@@ -26,11 +31,20 @@ public class RecordingStatusScreen extends AbstractScreen {
 
     protected void init(Panel rootPanel) {
         this.yPosition = new InterpolatedFloat(10f, 10f, 0);
+
         rootPanel.setMargin(4);
         rootPanel.setPosition(10, -20);
-        rootPanel.setBackgroundColor(0x99000000);
-        rootPanel.addComponent(new RecordingIndicator().setBounds(0, 0, 9, 9));
-        rootPanel.addComponent(label = (Label) new Label(Lang.getString("record.starting")).setX(15));
+        rootPanel.addDecorator(new SolidBackground(Theme.BACKGROUND));
+
+        RecordingIndicator indicator = new RecordingIndicator();
+        indicator.setBounds(0, 0, 9, 9);
+        rootPanel.addComponent(indicator);
+
+        this.label = new Label(Lang.getString("record.starting"));
+        this.label.setX(15);
+        rootPanel.addComponent(label);
+
+        Arrange.alignVertical(indicator, label, VerticalArrange.MIDDLE);
     }
 
     public void setRecordingStage() {
@@ -54,7 +68,7 @@ public class RecordingStatusScreen extends AbstractScreen {
         if (isStarted && RewindMod.RECORDER.isRecording()) {
             label.setText(Lang.tickToTimeString(RewindMod.RECORDER.getTickTime()));
         }
-        rootPanel.setY(yPosition.tickAndGet(partialTicks));
+        contentLayer.setY(yPosition.tickAndGet(partialTicks));
         super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 

@@ -3,6 +3,7 @@ package com.won983212.rewind.util;
 public class Color {
     private final int argb;
 
+
     private Color(int argb) {
         this.argb = argb;
     }

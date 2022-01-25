@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.won983212.rewind.ui.animate.InterpolatedColor;
 import com.won983212.rewind.ui.animate.InterpolatedValue;
 import com.won983212.rewind.util.Color;
+import com.won983212.rewind.util.UIUtils;
 
 public class RecordingIndicator extends AbstractComponent {
     private final InterpolatedValue<Color> color;
@@ -15,9 +16,8 @@ public class RecordingIndicator extends AbstractComponent {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        super.render(poseStack, mouseX, mouseY, partialTicks);
-        AbstractComponent.fillFloat(poseStack, 0, 0, width, height, 0x77ff0000);
-        AbstractComponent.fillFloat(poseStack, 2, 2, width - 2, height - 2, color.tickAndGet(partialTicks).getArgb());
+    public void renderComponent(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        UIUtils.fillFloat(poseStack, 0, 0, width, height, 0x77ff0000);
+        UIUtils.fillFloat(poseStack, 2, 2, width - 2, height - 2, color.tickAndGet(partialTicks).getArgb());
     }
 }

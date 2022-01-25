@@ -1,6 +1,8 @@
 package com.won983212.rewind.ui.component.panel;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.won983212.rewind.ui.ComponentArea;
+import com.won983212.rewind.ui.ComponentVec2;
 import com.won983212.rewind.ui.component.AbstractComponent;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -12,9 +14,7 @@ import java.util.List;
 
 @SuppressWarnings("UnusedReturnValue")
 public class Panel extends AbstractComponent implements ContainerEventHandler {
-    private int margin;
-    private int backgroundColor;
-    private final List<AbstractComponent> components;
+    protected final List<AbstractComponent> components;
 
     @Nullable
     private AbstractComponent focused;
@@ -23,76 +23,55 @@ public class Panel extends AbstractComponent implements ContainerEventHandler {
 
     public Panel() {
         this.components = Lists.newArrayList();
-        setBackgroundColor(0);
-        setMargin(2);
     }
 
     public void addComponent(AbstractComponent component) {
         component.setParent(this);
         this.components.add(component);
-        invalidateSize();
     }
 
-    public Panel setMargin(int margin) {
-        if (this.margin != margin) {
-            this.margin = margin;
-            invalidateSize();
-        }
-        return this;
-    }
-
-    public Panel setBackgroundColor(int color) {
-        this.backgroundColor = color;
-        return this;
-    }
-
+    @Override
     public void invalidateSize() {
+        for (AbstractComponent component : components) {
+            component.invalidateSize();
+        }
         super.invalidateSize();
-        if (parent != null) {
-            parent.invalidateSize();
+    }
+
+    @Override
+    public void arrange(ComponentArea available) {
+        super.arrange(available);
+        arrangeChildren(available);
+    }
+
+    protected void arrangeChildren(ComponentArea available) {
+        for (AbstractComponent component : components) {
+            component.arrange(available);
         }
     }
 
     @Override
-    protected void updateSize() {
-        if (parent != null) {
-            parent.updateSize();
-            return;
-        }
-        packSizeImpl();
-    }
-
-    private void packSizeImpl() {
-        float maxX = 0;
-        float maxY = 0;
-
-        for (AbstractComponent component : components) {
-            if (component instanceof Panel panel && panel.hasChangedSize) {
-                panel.packSizeImpl();
-            }
-            maxX = Math.max(maxX, component.getX() + component.getWidth());
-            maxY = Math.max(maxY, component.getY() + component.getHeight());
-        }
-
-        setSize(maxX + margin * 2, maxY + margin * 2);
-        hasChangedSize = false;
-    }
-
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        super.render(poseStack, mouseX, mouseY, partialTicks);
-
-        if (((backgroundColor >> 24) & 0xff) > 0) {
-            AbstractComponent.fillFloat(poseStack, 0, 0, width, height, backgroundColor);
-        }
-
+    public void renderComponent(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         poseStack.pushPose();
-        poseStack.translate(margin, margin, 0);
         for (AbstractComponent component : components) {
-            poseStack.translate(component.getX(), component.getY(), 0);
-            component.render(poseStack, mouseX, mouseY, partialTicks);
-            poseStack.translate(-component.getX(), -component.getY(), 0);
+            float x = component.getX();
+            float y = component.getY();
+            poseStack.translate(x, y, 0);
+            component.render(poseStack, (int) (mouseX - x), (int) (mouseY - y), partialTicks);
+            poseStack.translate(-x, -y, 0);
         }
         poseStack.popPose();
+    }
+
+    @Override
+    public ComponentVec2 measureMinSize() {
+        ComponentVec2 size = new ComponentVec2();
+        for (AbstractComponent obj : components) {
+            ComponentVec2 clientDim = obj.getMinSizeWithMargin();
+            size.x = Math.max(size.x, obj.getX() + clientDim.x);
+            size.y = Math.max(size.y, obj.getY() + clientDim.y);
+        }
+        return size;
     }
 
     @Override
