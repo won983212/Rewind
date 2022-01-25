@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.won983212.rewind.ui.ComponentArea;
 import com.won983212.rewind.ui.ComponentVec2;
 import com.won983212.rewind.ui.component.AbstractComponent;
+import com.won983212.rewind.ui.component.AbstractStyledComponent;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.commons.compress.utils.Lists;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 @SuppressWarnings("UnusedReturnValue")
-public class Panel extends AbstractComponent implements ContainerEventHandler {
+public class Panel extends AbstractStyledComponent implements ContainerEventHandler {
     protected final List<AbstractComponent> components;
 
     @Nullable
@@ -38,12 +39,6 @@ public class Panel extends AbstractComponent implements ContainerEventHandler {
         super.invalidateSize();
     }
 
-    @Override
-    public void arrange(ComponentArea available) {
-        super.arrange(available);
-        arrangeChildren(available);
-    }
-
     protected void arrangeChildren(ComponentArea available) {
         for (AbstractComponent component : components) {
             component.arrange(available);
@@ -52,15 +47,10 @@ public class Panel extends AbstractComponent implements ContainerEventHandler {
 
     @Override
     public void renderComponent(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        poseStack.pushPose();
+        super.renderComponent(poseStack, mouseX, mouseY, partialTicks);
         for (AbstractComponent component : components) {
-            float x = component.getX();
-            float y = component.getY();
-            poseStack.translate(x, y, 0);
-            component.render(poseStack, (int) (mouseX - x), (int) (mouseY - y), partialTicks);
-            poseStack.translate(-x, -y, 0);
+            component.render(poseStack, mouseX, mouseY, partialTicks);
         }
-        poseStack.popPose();
     }
 
     @Override
@@ -71,7 +61,7 @@ public class Panel extends AbstractComponent implements ContainerEventHandler {
             size.x = Math.max(size.x, obj.getX() + clientDim.x);
             size.y = Math.max(size.y, obj.getY() + clientDim.y);
         }
-        return size;
+        return getPositionOffset().toExpandedSize(size);
     }
 
     @Override

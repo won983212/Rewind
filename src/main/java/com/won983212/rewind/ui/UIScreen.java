@@ -10,13 +10,14 @@ import org.jetbrains.annotations.NotNull;
 public class UIScreen extends Screen {
     protected Panel contentLayer;
     protected Screen parent;
+    private boolean contentCentering;
     private boolean drawBackground;
 
 
     public UIScreen(Component title) {
         super(title);
-        this.parent = Minecraft.getInstance().screen;
         this.drawBackground = true;
+        this.contentCentering = false;
         this.contentLayer = new Panel();
     }
 
@@ -27,10 +28,36 @@ public class UIScreen extends Screen {
         drawBackground = false;
     }
 
+    public void useContentCentering() {
+        contentCentering = true;
+    }
+
+    public void useBackscreenRendering() {
+        this.parent = Minecraft.getInstance().screen;
+    }
+
+    protected void selfInitialize() {
+        Minecraft mc = Minecraft.getInstance();
+        init(mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+    }
+
     @Override
     protected void init() {
-        contentLayer = new Panel();
+        ComponentArea available = new ComponentArea(0, 0, width, height);
+        contentLayer = new Panel(){
+            @Override
+            public void layout() {
+                invalidateSize();
+                arrange(available);
+            }
+        };
+
         init(contentLayer);
+        if (contentCentering) {
+            contentLayer.setArrange(Arrange.CENTER_MIDDLE);
+        }
+
+        contentLayer.arrange(available);
     }
 
     @Override
@@ -39,15 +66,12 @@ public class UIScreen extends Screen {
             parent.render(poseStack, 0, 0, partialTicks);
         }
 
-        float panelX = contentLayer.getX();
-        float panelY = contentLayer.getY();
         poseStack.pushPose();
-        poseStack.translate(panelX, panelY, 2);
+        poseStack.translate(0, 0, 2);
         if (drawBackground) {
-            poseStack.translate(0, 0, 2);
             fillGradient(poseStack, 0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
         }
-        contentLayer.render(poseStack, (int) (mouseX - panelX), (int) (mouseY - panelY), partialTicks);
+        contentLayer.render(poseStack, mouseX, mouseY, partialTicks);
         poseStack.popPose();
     }
 

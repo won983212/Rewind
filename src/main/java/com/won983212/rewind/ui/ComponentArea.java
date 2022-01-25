@@ -17,4 +17,9 @@ public class ComponentArea {
         this.width = width;
         this.height = height;
     }
+
+    @Override
+    public String toString() {
+        return String.format("ComponentArea[x=%f, y=%f, width=%f, height=%f", x, y, width, height);
+    }
 }

@@ -9,6 +9,7 @@ import com.won983212.rewind.ui.component.AbstractComponent;
  */
 public class StackPanel extends Panel {
     private final Orientation orientation;
+    private float gap = 0;
 
 
     public StackPanel() {
@@ -19,37 +20,45 @@ public class StackPanel extends Panel {
         this.orientation = orientation;
     }
 
+    public StackPanel setGap(float gap) {
+        this.gap = gap;
+        return this;
+    }
+
     @Override
     public ComponentVec2 measureMinSize() {
         ComponentVec2 size = new ComponentVec2();
-        for (AbstractComponent obj : components) {
-            ComponentVec2 componentSize = obj.getMinSizeWithMargin();
+        int len = components.size();
+        for (int i = 0; i < len; i++) {
+            AbstractComponent component = components.get(i);
+            ComponentVec2 componentSize = component.getMinSizeWithMargin();
             if (orientation == Orientation.HORIZONTAL) {
-                size.x += componentSize.x;
+                size.x += componentSize.x + (i == len - 1 ? 0 : gap);
                 size.y = Math.max(size.y, componentSize.y);
             } else {
                 size.x = Math.max(size.x, componentSize.x);
-                size.y += componentSize.y;
+                size.y += componentSize.y + (i == len - 1 ? 0 : gap);
             }
         }
-        return size;
+        return getPositionOffset().toExpandedSize(size);
     }
 
     @Override
     public void arrangeChildren(ComponentArea available) {
         float x = available.x;
         float y = available.y;
-        for (AbstractComponent obj : components) {
-            ComponentVec2 componentSize = obj.getMinSizeWithMargin();
+        int len = components.size();
+        for (AbstractComponent component : components) {
+            ComponentVec2 componentSize = component.getMinSizeWithMargin();
             ComponentArea rect = new ComponentArea(x, y, componentSize.x, componentSize.y);
             if (orientation == Orientation.HORIZONTAL) {
-                x += componentSize.x;
-                rect.height = getHeight();
+                x += componentSize.x + gap;
+                rect.height = available.height;
             } else {
-                y += componentSize.y;
-                rect.width = getWidth();
+                y += componentSize.y + gap;
+                rect.width = available.width;
             }
-            obj.arrange(rect);
+            component.arrange(rect);
         }
     }
 

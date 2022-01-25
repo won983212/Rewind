@@ -88,6 +88,11 @@ public class UIUtils {
         return len;
     }
 
+    public static float snapToPixel(float value) {
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        return (float) ((int) (value * guiScale) / guiScale);
+    }
+
     public static void fillFloat(PoseStack poseStack, ComponentArea area, int color) {
         fillFloat(poseStack, area.x, area.y, area.width, area.height, color);
     }

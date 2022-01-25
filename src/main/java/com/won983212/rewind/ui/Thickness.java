@@ -39,4 +39,13 @@ public class Thickness {
     public ComponentArea toContentRect(ComponentArea rect) {
         return new ComponentArea(rect.x + left, rect.y + top, rect.width - left - right, rect.height - top - bottom);
     }
+
+    public Thickness combine(Thickness other) {
+        return new Thickness(top + other.top, bottom + other.bottom, left + other.left, right + other.right);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Thickness[top=%d, bottom=%d, left=%d, right=%d]", top, bottom, left, right);
+    }
 }

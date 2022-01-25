@@ -21,8 +21,10 @@ public class Label extends AbstractStyledComponent {
         if (text == null) {
             text = "";
         }
-        this.text = text;
-        calculateSize();
+        if (!text.equals(this.text)) {
+            this.text = text;
+            calculateSize();
+        }
         return this;
     }
 
@@ -50,31 +52,41 @@ public class Label extends AbstractStyledComponent {
     }
 
     public Label useDefaultFont() {
-        useDefaultFont = true;
-        calculateSize();
+        if (!useDefaultFont) {
+            useDefaultFont = true;
+            calculateSize();
+        }
         return this;
     }
 
     public Label useWrapping() {
-        useWrapping = true;
-        calculateSize();
+        if (!useWrapping) {
+            useWrapping = true;
+            calculateSize();
+        }
         return this;
     }
 
     public Label setMaxWidth(float width) {
-        this.maxWidth = width;
-        calculateSize();
+        if (maxWidth != width) {
+            this.maxWidth = width;
+            calculateSize();
+        }
         return this;
     }
 
     public Label setScale(float scale) {
-        this.scale = scale;
-        calculateSize();
+        if (this.scale != scale) {
+            this.scale = scale;
+            calculateSize();
+        }
         return this;
     }
 
     @Override
     public void renderComponent(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        super.renderComponent(poseStack, mouseX, mouseY, partialTicks);
+
         if (useDefaultFont) {
             UIUtils.setToDefaultFont();
         }
@@ -90,9 +102,9 @@ public class Label extends AbstractStyledComponent {
         }
 
         if (useWrapping) {
-            UIUtils.drawText(font, poseStack, text, 0, 0, foregroundColor.getArgb(), 0, (int) getWidth());
+            UIUtils.drawText(font, poseStack, text, 0, 1, foregroundColor.getArgb(), 0, (int) getWidth());
         } else {
-            UIUtils.drawText(font, poseStack, text, 0, 0, foregroundColor.getArgb());
+            UIUtils.drawText(font, poseStack, text, 0, 1, foregroundColor.getArgb());
         }
 
         if (scale != 1) {

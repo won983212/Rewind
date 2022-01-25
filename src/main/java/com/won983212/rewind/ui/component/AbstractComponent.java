@@ -28,8 +28,19 @@ public abstract class AbstractComponent implements GuiEventListener {
         if (!isVisible) {
             return;
         }
-        getActualMinimumSize();
-        renderComponent(poseStack, mouseX, mouseY, partialTicks);
+
+        if (measuredMinimumSize == null) {
+            getActualMinimumSize();
+            layout();
+        }
+
+        float x = getX();
+        float y = getY();
+
+        poseStack.pushPose();
+        poseStack.translate(x, y, 0);
+        renderComponent(poseStack, (int) (mouseX - x), (int) (mouseY - y), partialTicks);
+        poseStack.popPose();
     }
 
     public String getId() {
@@ -74,13 +85,12 @@ public abstract class AbstractComponent implements GuiEventListener {
 
     /**
      * 모든 연관된 컴포넌트들을 다시 layout합니다.
-     * A 컴포넌트에서 <code>parent</code>를 연쇄적으로 얻어 B 컴포넌트 객체를 얻을 수 있으면, A와 B는 연관되었다고 봅니다.
+     * A 컴포넌트에서 <code>B = A.parent.parent ...</code>과 같이 B 컴포넌트 객체를 얻을 수 있으면,
+     * A와 B는 연관되었다고 봅니다.
      */
     public void layout() {
         if (parent != null) {
             parent.layout();
-        } else {
-            arrange(new ComponentArea(0, 0, getWidth(), getHeight()));
         }
     }
 
@@ -90,9 +100,15 @@ public abstract class AbstractComponent implements GuiEventListener {
     public ComponentVec2 getActualMinimumSize() {
         if (measuredMinimumSize == null) {
             measuredMinimumSize = measureMinSize();
-            layout();
         }
         return measuredMinimumSize;
+    }
+
+    /**
+     * 컨텐츠를 rendering할 때 필요한 offset을 계산합니다. padding이나 border thickness를 합하여 반환합니다.
+     */
+    protected Thickness getPositionOffset() {
+        return padding;
     }
 
     /**
@@ -101,7 +117,7 @@ public abstract class AbstractComponent implements GuiEventListener {
      * 이용하세요.
      */
     protected ComponentVec2 measureMinSize() {
-        return padding.toExpandedSize(preferredMinimumSize);
+        return getPositionOffset().toExpandedSize(preferredMinimumSize);
     }
 
     /**
@@ -110,6 +126,13 @@ public abstract class AbstractComponent implements GuiEventListener {
     public void arrange(ComponentArea available) {
         setSizeByArrange(available);
         setPositionByArrange(available);
+        arrangeChildren(getPositionOffset().toContentRect(new ComponentArea(0, 0, getWidth(), getHeight())));
+    }
+
+    /**
+     * <code>available</code>영역에 자식 컴포넌트를 배치합니다. 패널 구현에서 사용됩니다.
+     */
+    protected void arrangeChildren(ComponentArea available) {
     }
 
     private void setPositionByArrange(ComponentArea available) {
@@ -119,7 +142,7 @@ public abstract class AbstractComponent implements GuiEventListener {
     }
 
     private void setSizeByArrange(ComponentArea available) {
-        ComponentVec2 size = measureMinSize();
+        ComponentVec2 size = getActualMinimumSize();
         ComponentArea contentArea = margin.toContentRect(available);
         area.width = Math.min(Math.max(preferredMinimumSize.x, hArrange.getArrangedWidth(contentArea, size.x)), contentArea.width);
         area.height = Math.min(Math.max(preferredMinimumSize.y, vArrange.getArrangedHeight(contentArea, size.y)), contentArea.height);
@@ -175,11 +198,13 @@ public abstract class AbstractComponent implements GuiEventListener {
 
     public AbstractComponent setMargin(Thickness margin) {
         this.margin = margin;
+        invalidateSize();
         return this;
     }
 
     public AbstractComponent setPadding(Thickness padding) {
         this.padding = padding;
+        invalidateSize();
         return this;
     }
 

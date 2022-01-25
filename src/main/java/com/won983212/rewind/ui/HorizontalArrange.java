@@ -1,5 +1,7 @@
 package com.won983212.rewind.ui;
 
+import com.won983212.rewind.util.UIUtils;
+
 public enum HorizontalArrange {
     LEFT, CENTER, RIGHT, STRETCH;
 
@@ -13,7 +15,7 @@ public enum HorizontalArrange {
     public float getArrangedX(ComponentArea available, float componentWidth) {
         return switch (this) {
             case RIGHT -> available.x + available.width - componentWidth;
-            case CENTER -> available.x + (available.width - componentWidth) / 2;
+            case CENTER -> UIUtils.snapToPixel(available.x + (available.width - componentWidth) / 2);
             default -> available.x;
         };
     }

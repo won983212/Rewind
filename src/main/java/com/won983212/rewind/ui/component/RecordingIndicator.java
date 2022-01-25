@@ -12,11 +12,13 @@ public class RecordingIndicator extends AbstractComponent {
     public RecordingIndicator() {
         this.color = new InterpolatedColor(Color.of(0x99ff0000), Color.of(0x00ff0000), 40)
                 .setLooping(InterpolatedValue.LoopingType.CONTINUOUS_LOOP);
-        setSize(10, 10);
+        setPreferredMinimalSize(10, 10);
     }
 
     @Override
     public void renderComponent(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        float width = getWidth();
+        float height = getHeight();
         UIUtils.fillFloat(poseStack, 0, 0, width, height, 0x77ff0000);
         UIUtils.fillFloat(poseStack, 2, 2, width - 2, height - 2, color.tickAndGet(partialTicks).getArgb());
     }

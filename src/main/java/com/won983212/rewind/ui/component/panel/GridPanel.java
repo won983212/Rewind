@@ -130,7 +130,7 @@ public class GridPanel extends Panel {
         measureMaxSize();
         size.x = (int) calculateMinLength(columns);
         size.y = (int) calculateMinLength(rows);
-        return size;
+        return getPositionOffset().toExpandedSize(size);
     }
 
     @Override

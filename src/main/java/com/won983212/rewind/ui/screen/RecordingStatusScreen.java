@@ -2,17 +2,14 @@ package com.won983212.rewind.ui.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.won983212.rewind.RewindMod;
-import com.won983212.rewind.ui.Theme;
-import com.won983212.rewind.ui.UIScreen;
-import com.won983212.rewind.ui.Arrange;
-import com.won983212.rewind.ui.VerticalArrange;
+import com.won983212.rewind.ui.*;
 import com.won983212.rewind.ui.animate.EasingFunction;
 import com.won983212.rewind.ui.animate.InterpolatedFloat;
 import com.won983212.rewind.ui.animate.InterpolatedValue;
 import com.won983212.rewind.ui.component.Label;
 import com.won983212.rewind.ui.component.RecordingIndicator;
-import com.won983212.rewind.ui.decorator.SolidBackground;
 import com.won983212.rewind.ui.component.panel.Panel;
+import com.won983212.rewind.ui.component.panel.StackPanel;
 import com.won983212.rewind.util.Lang;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,25 +23,28 @@ public class RecordingStatusScreen extends UIScreen {
 
     public RecordingStatusScreen() {
         super(Lang.getComponent("title.record_status"));
-        init();
+        disableDrawBackground();
+        selfInitialize();
     }
 
     protected void init(Panel rootPanel) {
         this.yPosition = new InterpolatedFloat(10f, 10f, 0);
 
-        rootPanel.setMargin(4);
-        rootPanel.setPosition(10, -20);
-        rootPanel.addDecorator(new SolidBackground(Theme.BACKGROUND));
+        StackPanel panel = new StackPanel();
+        panel.setPadding(new Thickness(3));
+        panel.setBackgroundColor(Theme.BACKGROUND);
+        panel.setGap(4);
+
+        rootPanel.addComponent(panel);
+        rootPanel.setArrange(Arrange.LEFT_TOP);
+        rootPanel.setMargin(new Thickness(0, 0, 10, 0));
 
         RecordingIndicator indicator = new RecordingIndicator();
-        indicator.setBounds(0, 0, 9, 9);
-        rootPanel.addComponent(indicator);
+        panel.addComponent(indicator);
 
         this.label = new Label(Lang.getString("record.starting"));
-        this.label.setX(15);
-        rootPanel.addComponent(label);
-
-        Arrange.alignVertical(indicator, label, VerticalArrange.MIDDLE);
+        this.label.setVerticalArrange(VerticalArrange.MIDDLE);
+        panel.addComponent(label);
     }
 
     public void setRecordingStage() {

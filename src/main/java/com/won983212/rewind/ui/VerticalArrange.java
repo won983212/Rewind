@@ -1,5 +1,7 @@
 package com.won983212.rewind.ui;
 
+import com.won983212.rewind.util.UIUtils;
+
 public enum VerticalArrange {
     TOP, MIDDLE, BOTTOM, STRETCH;
 
@@ -13,7 +15,7 @@ public enum VerticalArrange {
     public float getArrangedY(ComponentArea available, float componentHeight) {
         return switch (this) {
             case BOTTOM -> available.y + available.height - componentHeight;
-            case MIDDLE -> available.y + (available.height - componentHeight) / 2;
+            case MIDDLE -> UIUtils.snapToPixel(available.y + (available.height - componentHeight) / 2);
             default -> available.y;
         };
     }
