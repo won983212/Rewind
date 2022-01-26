@@ -18,6 +18,10 @@ public class ComponentVec2 {
         this.y = y;
     }
 
+    public ComponentVec2 add(float x, float y) {
+        return new ComponentVec2(this.x + x, this.y + y);
+    }
+
     @Override
     public String toString() {
         return String.format("ComponentVec2[x=%f, y=%f", x, y);

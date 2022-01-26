@@ -61,7 +61,7 @@ public class Panel extends AbstractStyledComponent implements ContainerEventHand
             size.x = Math.max(size.x, obj.getX() + clientDim.x);
             size.y = Math.max(size.y, obj.getY() + clientDim.y);
         }
-        return getPositionOffset().toExpandedSize(size);
+        return size;
     }
 
     @Override

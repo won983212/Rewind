@@ -9,7 +9,7 @@ import com.won983212.rewind.ui.component.AbstractComponent;
  */
 public class StackPanel extends Panel {
     private final Orientation orientation;
-    private float gap = 0;
+    private float gap = 2;
 
 
     public StackPanel() {
@@ -40,7 +40,7 @@ public class StackPanel extends Panel {
                 size.y += componentSize.y + (i == len - 1 ? 0 : gap);
             }
         }
-        return getPositionOffset().toExpandedSize(size);
+        return size;
     }
 
     @Override

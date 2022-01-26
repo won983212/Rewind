@@ -95,11 +95,12 @@ public abstract class AbstractComponent implements GuiEventListener {
     }
 
     /**
-     * 이 컴포넌트의 최소 크기를 계산합니다. 한번 계산하고나면 그 값이 캐시됩니다.
+     * 이 컴포넌트의 최소 크기를 계산합니다. 이 사이즈에는 padding, border thickness가 포함됩니다.
+     * 한번 계산하고나면 그 값이 캐시됩니다.
      */
     public ComponentVec2 getActualMinimumSize() {
         if (measuredMinimumSize == null) {
-            measuredMinimumSize = measureMinSize();
+            measuredMinimumSize = getPositionOffset().toExpandedSize(measureMinSize());
         }
         return measuredMinimumSize;
     }
@@ -112,12 +113,12 @@ public abstract class AbstractComponent implements GuiEventListener {
     }
 
     /**
-     * 이 컴포넌트의 최소 size를 계산합니다. 여기서 계산되는 최소 size는 margin을 포함하지 않습니다.
+     * 이 컴포넌트의 최소 size를 계산합니다. 여기서 계산되는 최소 size는 padding, border thickness, margin을 포함하지 않습니다.
      * 계산이 다소 느릴 수 있으므로 (특히 Panel종류에서) 매번 직접 계산하지 말고 <code>getActualMinimumSize</code>를
      * 이용하세요.
      */
     protected ComponentVec2 measureMinSize() {
-        return getPositionOffset().toExpandedSize(preferredMinimumSize);
+        return preferredMinimumSize;
     }
 
     /**
